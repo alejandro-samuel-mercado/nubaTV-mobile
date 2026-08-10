@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { useGlobal, API_URL } from '../contexts/GlobalContext';
 import { useRouter } from 'expo-router';
@@ -12,14 +12,30 @@ export default function PlayerScreen() {
   const videoRef = useRef<Video>(null);
   const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
 
-  useEffect(() => {
-    async function lockLandscape() {
-      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+  const lockLandscape = async () => {
+    if (Platform.OS !== 'web') {
+      try {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+      } catch (error) {
+        console.log('Orientation lock failed:', error);
+      }
     }
-    lockLandscape();
+  };
 
+  const unlockOrientation = async () => {
+    if (Platform.OS !== 'web') {
+      try {
+        await ScreenOrientation.unlockAsync();
+      } catch (error) {
+        console.log('Orientation unlock failed:', error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    lockLandscape();
     return () => {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      unlockOrientation();
     };
   }, []);
 

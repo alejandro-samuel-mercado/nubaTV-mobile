@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import '../global.css';
 import { StatusBar } from 'expo-status-bar';
+import AnimatedBackground from '../components/AnimatedBackground';
 
 function InitialLayout() {
   const { user, token, loading } = useGlobal();
@@ -17,18 +18,15 @@ function InitialLayout() {
     const inAdminGroup = segments[0] === '(admin)';
 
     if (!token) {
-      // If not signed in and not in the auth group, redirect to login
       if (!inAuthGroup) {
         router.replace('/(auth)/login');
       }
     } else if (token) {
       if (user?.role === 'admin') {
-        // Admins go to admin panel
         if (!inAdminGroup) {
           router.replace('/(admin)/dashboard');
         }
       } else {
-        // Users go to tabs
         if (inAuthGroup || inAdminGroup) {
           router.replace('/(tabs)');
         }
@@ -38,19 +36,23 @@ function InitialLayout() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#02050a] items-center justify-center">
-        <ActivityIndicator size="large" color="#06b6d4" />
+      <View style={{ flex: 1, backgroundColor: '#1e1b4b', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#d9f943" />
       </View>
     );
   }
 
-  return <Slot />;
+  return (
+    <View style={{ flex: 1, backgroundColor: '#020512' }}>
+      <Slot />
+    </View>
+  );
 }
 
 export default function RootLayout() {
   return (
     <GlobalProvider>
-      <StatusBar style="light" />
+      <StatusBar style="light" translucent={true} backgroundColor="transparent" />
       <InitialLayout />
     </GlobalProvider>
   );

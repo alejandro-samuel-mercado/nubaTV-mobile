@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useGlobal, API_URL } from '../../contexts/GlobalContext';
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from '../../utils/storage';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');

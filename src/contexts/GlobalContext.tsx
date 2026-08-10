@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from '../utils/storage';
 
 // Set to your API URL
 export const API_URL = 'https://nubatv-api.unixxtech.online/api';
@@ -44,10 +44,20 @@ interface GlobalContextType {
   selectedPlaylist: string | null;
   setSelectedPlaylist: (playlist: string | null) => void;
   
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  selectedCategory: string | null;
+  setSelectedCategory: (cat: string | null) => void;
+  selectedCountry: string | null;
+  setSelectedCountry: (country: string | null) => void;
+  selectedLanguage: string | null;
+  setSelectedLanguage: (lang: string | null) => void;
+  
   favorites: string[];
   toggleFavorite: (id: string) => void;
   
   loading: boolean;
+  loadingChannels: boolean;
   
   refreshAuth: () => Promise<void>;
   fetchChannels: () => Promise<void>;
@@ -62,8 +72,15 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
   const [playlists, setPlaylists] = useState<string[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+
   const [favorites, setFavorites] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingChannels, setLoadingChannels] = useState(true);
 
   // Initialize Auth & Interceptors
   useEffect(() => {
@@ -109,6 +126,7 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
 
   const fetchChannels = async () => {
     if (!token) return;
+    setLoadingChannels(true);
     try {
       const res = await axios.get(`${API_URL}/channels?limit=20000`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -124,6 +142,8 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.log('Error fetching channels:', error);
+    } finally {
+      setLoadingChannels(false);
     }
   };
 
@@ -159,8 +179,12 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
       user, setUser, token, setToken, logout, refreshAuth,
       channels, setChannels, activeChannel, setActiveChannel,
       playlists, selectedPlaylist, setSelectedPlaylist,
+      searchQuery, setSearchQuery,
+      selectedCategory, setSelectedCategory,
+      selectedCountry, setSelectedCountry,
+      selectedLanguage, setSelectedLanguage,
       favorites, toggleFavorite,
-      loading, fetchChannels
+      loading, fetchChannels, loadingChannels
     }}>
       {children}
     </GlobalContext.Provider>
