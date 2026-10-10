@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, ScrollView, FlatList, TouchableOpacity, Image, TextInput, BackHandler } from 'react-native';
 import { useGlobal, Channel } from '../../contexts/GlobalContext';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Search, X, ChevronRight, ChevronLeft, Tv2 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useThemeColors } from '../../theme/colors';
@@ -15,19 +15,35 @@ export default function ExploreScreen() {
   } = useGlobal();
   
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { colorScheme } = useColorScheme();
   const theme = useThemeColors(colorScheme);
 
   const [explorerType, setExplorerType] = useState<'category' | 'country' | 'language' | 'playlist' | null>(null);
   const [explorerValue, setExplorerValue] = useState<string | null>(null);
   const [localSearch, setLocalSearch] = useState('');
+  
+  const [globalSearch, setGlobalSearch] = useState('');
+  const searchInputRef = useRef<TextInput>(null);
 
-  const categories = useMemo(() => Array.from(new Set(channels.map(c => c.category?.name).filter(Boolean))).sort() as string[], [channels]);
+  useEffect(() => {
+    if (params.focus === 'true') {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 300);
+    }
+  }, [params.focus]);
+
   const countries = useMemo(() => Array.from(new Set(channels.map(c => c.country).filter(Boolean))).sort() as string[], [channels]);
+  const categories = useMemo(() => Array.from(new Set(channels.map(c => c.category?.name).filter(Boolean))).filter(cat => !countries.includes(cat as any)).sort() as string[], [channels, countries]);
 
   // Handle hardware back button on Android
-  React.useEffect(() => {
+  useEffect(() => {
     const backAction = () => {
+      if (globalSearch) {
+        setGlobalSearch('');
+        return true;
+      }
       if (explorerValue) {
         setExplorerValue(null);
         setLocalSearch('');
@@ -42,16 +58,57 @@ export default function ExploreScreen() {
     };
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
     return () => backHandler.remove();
-  }, [explorerType, explorerValue]);
+  }, [explorerType, explorerValue, globalSearch]);
 
   const handlePlay = (channel: Channel) => {
     setActiveChannel(channel);
     router.push(`/player`);
   };
 
+  const renderChannelItem = (channel: Channel) => (
+    <TouchableOpacity 
+      key={channel.id}
+      onPress={() => handlePlay(channel)}
+      className="w-full mb-3 rounded-2xl p-3 flex-row items-center border"
+      style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}
+    >
+      <View className="w-12 h-12 rounded-xl items-center justify-center mr-4 border" style={{ backgroundColor: theme.bgBase, borderColor: theme.borderSubtle, overflow: 'hidden' }}>
+        {channel.logo ? (
+          <Image source={{ uri: channel.logo }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+        ) : (
+          <Tv2 size={20} color={theme.textSecondary} />
+        )}
+      </View>
+      <View className="flex-1">
+        <Text className="text-sm font-bold mb-1" style={{ color: theme.textPrimary }} numberOfLines={1}>{channel.name}</Text>
+        <Text className="text-[10px] uppercase tracking-widest font-bold" style={{ color: theme.textSecondary }} numberOfLines={1}>{channel.country || 'Desconocido'}</Text>
+      </View>
+      <ChevronRight color={theme.textSecondary} size={20} />
+    </TouchableOpacity>
+  );
+
+  const renderGlobalSearch = () => {
+    const listChannels = channels.filter(c => c.name.toLowerCase().includes(globalSearch.toLowerCase()));
+    return (
+      <FlatList
+        className="flex-1 px-6"
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        data={listChannels}
+        keyExtractor={(item) => item.id}
+        initialNumToRender={20}
+        maxToRenderPerBatch={20}
+        windowSize={10}
+        renderItem={({ item }) => renderChannelItem(item)}
+        ListEmptyComponent={
+          <Text className="text-center mt-8 font-bold" style={{ color: theme.textSecondary }}>No se encontraron canales.</Text>
+        }
+      />
+    );
+  };
+
   const renderExplorerTypes = () => (
     <ScrollView className="flex-1 px-6 pt-4" contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-     
       <TouchableOpacity onPress={() => { setExplorerType('category'); setLocalSearch(''); }} className="w-full mb-3 rounded-2xl p-5 flex-row items-center justify-between border" style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}>
         <Text className="font-bold text-lg" style={{ color: theme.textPrimary }}>Categorías</Text>
         <ChevronRight color={theme.textSecondary} size={20} />
@@ -193,26 +250,7 @@ export default function ExploreScreen() {
           initialNumToRender={20}
           maxToRenderPerBatch={20}
           windowSize={10}
-          renderItem={({ item: channel }) => (
-            <TouchableOpacity 
-              onPress={() => handlePlay(channel)}
-              className="w-full mb-3 rounded-2xl p-3 flex-row items-center border"
-              style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}
-            >
-              <View className="w-12 h-12 rounded-xl items-center justify-center mr-4 border" style={{ backgroundColor: theme.bgBase, borderColor: theme.borderSubtle, overflow: 'hidden' }}>
-                {channel.logo ? (
-                  <Image source={{ uri: channel.logo }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-                ) : (
-                  <Tv2 size={20} color={theme.textSecondary} />
-                )}
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-bold mb-1" style={{ color: theme.textPrimary }} numberOfLines={1}>{channel.name}</Text>
-                <Text className="text-[10px] uppercase tracking-widest font-bold" style={{ color: theme.textSecondary }} numberOfLines={1}>{channel.country || 'Desconocido'}</Text>
-              </View>
-              <ChevronRight color={theme.textSecondary} size={20} />
-            </TouchableOpacity>
-          )}
+          renderItem={({ item }) => renderChannelItem(item)}
           ListEmptyComponent={
             <Text className="text-center mt-8 font-bold" style={{ color: theme.textSecondary }}>No se encontraron canales.</Text>
           }
@@ -225,13 +263,45 @@ export default function ExploreScreen() {
     <View className="flex-1">
       <AnimatedBackground />
 
-      <View className="px-6 mt-16 mb-2">
+      <View className="px-6 mt-16 mb-4">
         <Text className="text-4xl font-black tracking-tighter" style={{ color: theme.textPrimary }}>Explorar</Text>
       </View>
 
-      {!explorerType && renderExplorerTypes()}
-      {explorerType && !explorerValue && renderValuesList()}
-      {explorerType && explorerValue && renderChannelsList()}
+      {/* Global Search Input */}
+      {!explorerType && (
+        <View className="px-6 mb-4 relative">
+          <View className="absolute left-10 top-3.5 z-10">
+            <Search color={theme.textSecondary} size={16} />
+          </View>
+          <TextInput
+            ref={searchInputRef}
+            className="w-full rounded-xl py-3 pl-12 pr-10 border font-bold"
+            style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle, color: theme.textPrimary }}
+            placeholder="Buscar canales..."
+            placeholderTextColor={theme.textSecondary}
+            value={globalSearch}
+            onChangeText={setGlobalSearch}
+          />
+          {globalSearch.length > 0 && (
+            <TouchableOpacity 
+              onPress={() => setGlobalSearch('')}
+              className="absolute right-10 top-3.5 z-10"
+            >
+              <X color={theme.textSecondary} size={16} />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {globalSearch.length > 0 && !explorerType ? (
+        renderGlobalSearch()
+      ) : (
+        <>
+          {!explorerType && renderExplorerTypes()}
+          {explorerType && !explorerValue && renderValuesList()}
+          {explorerType && explorerValue && renderChannelsList()}
+        </>
+      )}
     </View>
   );
 }

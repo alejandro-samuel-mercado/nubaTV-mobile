@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TouchableWithoutFeedback, ActivityIndicator, Platform, ScrollView, FlatList, Image, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, ActivityIndicator, Platform, ScrollView, FlatList, Image, TextInput } from 'react-native';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { useGlobal, API_URL, Channel } from '../contexts/GlobalContext';
 import { useRouter } from 'expo-router';
@@ -106,7 +106,9 @@ export default function PlayerScreen() {
   }
 
   const isFav = favorites.includes(activeChannel.id);
-  const proxyUrl = `${API_URL}/proxy?url=${encodeURIComponent(activeChannel.url)}`;
+  const proxyUrl = Platform.OS === 'web' 
+    ? `${API_URL}/proxy?url=${encodeURIComponent(activeChannel.url)}` 
+    : activeChannel.url;
 
   // Combine Native and Web playback states
   const isPlaying = Platform.OS === 'web' ? webIsPlaying : (status?.isLoaded ? status.isPlaying : false);
@@ -137,7 +139,14 @@ export default function PlayerScreen() {
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('durationchange', onDurationChange);
 
-    if (Hls.isSupported()) {
+    const isVOD = proxyUrl.toLowerCase().includes('.mp4') || proxyUrl.toLowerCase().includes('.mkv') || proxyUrl.toLowerCase().includes('/series/') || proxyUrl.toLowerCase().includes('/movie/');
+
+    if (isVOD) {
+      video.src = proxyUrl;
+      video.addEventListener('loadedmetadata', () => {
+        video.play().catch(() => {});
+      });
+    } else if (Hls.isSupported()) {
       hls = new Hls({ startLevel: -1 });
       hls.loadSource(proxyUrl);
       hls.attachMedia(video);
@@ -254,7 +263,7 @@ export default function PlayerScreen() {
 
   return (
     <View className="flex-1 bg-black">
-      <TouchableWithoutFeedback onPress={resetControlsTimeout}>
+      <Pressable onPress={resetControlsTimeout} style={{flex: 1}}>
         <View className="flex-1 w-full h-full relative" style={{ backgroundColor: 'black' }}>
           {Platform.OS === 'web' ? (
             React.createElement('video', {
@@ -454,7 +463,7 @@ export default function PlayerScreen() {
             </View>
           )}
         </View>
-      </TouchableWithoutFeedback>
+      </Pressable>
     </View>
   );
 }

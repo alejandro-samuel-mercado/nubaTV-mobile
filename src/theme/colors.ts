@@ -5,21 +5,21 @@
 
 export const DARK = {
   // Backgrounds
-  bgBase:       '#18181b',   // Zinc 900 (Soft dark gray, not pitch black)
-  bgPanel:      '#27272a',   // Zinc 800
-  bgCard:       '#3f3f46',   // Zinc 700
+  bgBase:       '#080808',   // Match web --bg-base
+  bgPanel:      '#0a0502',   // Match web --bg-panel
+  bgCard:       '#1a100a',   // Slightly lighter than panel
 
   // Text
-  textPrimary:  '#f4f4f5',   // Zinc 50 (Very light gray)
-  textSecondary:'#a1a1aa',   // Muted slate (Zinc 400)
-  textAccent:   '#d4af37',   // Metallic gold
+  textPrimary:  '#ffffff',   // Pure white
+  textSecondary:'rgba(255, 255, 255, 0.5)',   // Match web --text-muted
+  textAccent:   '#ffb703',   // Amber brilliant
 
   // Borders
   borderSubtle: 'rgba(255, 255, 255, 0.1)', // Translucent white border
 
   // Accent / Brand
-  accent:       '#d4af37',   // Metallic gold
-  accentGlow:   'rgba(212, 175, 55, 0.2)',
+  accent:       '#ffb703',   // Web --tv-cyan equivalent (Amber)
+  accentGlow:   'rgba(255, 183, 3, 0.2)',
 };
 
 export const LIGHT = {

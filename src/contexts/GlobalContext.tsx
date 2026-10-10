@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as SecureStore from '../utils/storage';
 
 // Set to your API URL
-export const API_URL = 'http://localhost:4000/api';
+export const API_URL = 'https://nubatv-api.unixxtech.online/api';
 
 export interface Channel {
   id: string;
@@ -26,6 +26,8 @@ export interface User {
   expiresAt: string | null;
   isActive: boolean;
   maxDevices: number;
+  createdAt?: string;
+  daysRemaining?: number | null;
 }
 
 interface GlobalContextType {
