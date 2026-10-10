@@ -16,7 +16,7 @@ export interface Channel {
   playlistId: string | null;
   isActive: boolean;
   category?: { name: string };
-  playlist?: { name: string };
+  playlist?: { name: string; isDefault?: boolean };
 }
 
 export interface User {
@@ -139,8 +139,16 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
       setPlaylists(uniquePlaylists);
       
       setChannels(activeChannels);
-      if (activeChannels.length > 0 && !activeChannel) {
-        setActiveChannel(activeChannels[0]);
+      
+      // Select random initial channel from default playlists or all if none
+      const defaultPlaylists = Array.from(new Set(activeChannels.filter((c: Channel) => c.playlist?.isDefault).map((c: Channel) => c.playlist?.name).filter(Boolean))) as string[];
+      const initialChannels = defaultPlaylists.length > 0 
+        ? activeChannels.filter((c: Channel) => defaultPlaylists.includes(c.playlist?.name as string))
+        : activeChannels;
+        
+      if (initialChannels.length > 0 && !activeChannel) {
+        const randomIndex = Math.floor(Math.random() * initialChannels.length);
+        setActiveChannel(initialChannels[randomIndex]);
       }
     } catch (error) {
       console.log('Error fetching channels:', error);

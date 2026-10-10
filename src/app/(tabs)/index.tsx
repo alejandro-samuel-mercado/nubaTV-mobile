@@ -63,12 +63,18 @@ export default function HomeScreen() {
   }, [heroChannel, loadingChannels]);
 
   const filteredChannels = useMemo(() => {
+    const defaultPlaylists = Array.from(new Set(channels.filter(c => c.playlist?.isDefault).map(c => c.playlist?.name).filter(Boolean))) as string[];
+
     return channels.filter(c => {
       if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (selectedCategory && c.category?.name !== selectedCategory) return false;
       if (selectedCountry && c.country !== selectedCountry) return false;
       if (selectedLanguage && c.language !== selectedLanguage) return false;
-      if (selectedPlaylist && c.playlist?.name !== selectedPlaylist) return false;
+      if (selectedPlaylist) {
+        if (c.playlist?.name !== selectedPlaylist) return false;
+      } else if (defaultPlaylists.length > 0) {
+        if (!defaultPlaylists.includes(c.playlist?.name as string)) return false;
+      }
       return true;
     });
   }, [channels, searchQuery, selectedCategory, selectedCountry, selectedLanguage, selectedPlaylist]);
