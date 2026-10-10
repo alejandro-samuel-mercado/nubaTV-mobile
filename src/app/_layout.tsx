@@ -2,6 +2,7 @@ import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { useColorScheme } from 'nativewind';
 import { GlobalProvider, useGlobal } from '../contexts/GlobalContext';
 import '../global.css';
 
@@ -50,12 +51,16 @@ function InitialLayout() {
 
 
 export default function RootLayout() {
+  const { setColorScheme } = useColorScheme();
+  
+  useEffect(() => {
+    setColorScheme('dark');
+  }, [setColorScheme]);
+
   return (
-    <ThemeProvider value={DarkTheme}>
-      <GlobalProvider>
-        <StatusBar style="light" />
-        <InitialLayout />
-      </GlobalProvider>
-    </ThemeProvider>
+    <GlobalProvider>
+      <StatusBar style="light" />
+      <InitialLayout />
+    </GlobalProvider>
   );
 }
