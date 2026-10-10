@@ -46,30 +46,30 @@ export default function FilterModal({ visible, onClose, onApply }: FilterModalPr
     return (
       <View className="flex-1">
         {/* Sub-menu Header */}
-        <View className="flex-row items-center px-6 pt-16 pb-6 border-b border-white/5">
-          <TouchableOpacity onPress={() => setActiveMenu('main')} className="bg-white/10 p-2 rounded-full mr-4">
+        <View className="flex-row items-center px-6 pt-16 pb-6 border-b border-border-subtle">
+          <TouchableOpacity onPress={() => setActiveMenu('main')} className="bg-bg-panel p-2 rounded-full mr-4">
             <ChevronLeft color="white" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-black">{title}</Text>
+          <Text className="text-text-base text-xl font-black">{title}</Text>
         </View>
 
         <ScrollView className="flex-1 py-4" showsVerticalScrollIndicator={false}>
           <TouchableOpacity 
             onPress={() => { onSelect(null); setActiveMenu('main'); }}
-            className="flex-row items-center justify-between px-6 py-4 border-b border-white/5"
+            className="flex-row items-center justify-between px-6 py-4 border-b border-border-subtle"
           >
-            <Text className={`text-lg ${!selectedValue ? 'font-bold' : 'text-white'}`} style={!selectedValue ? { color: '#d9f943' } : {}}>Todos</Text>
-            {!selectedValue && <Check color="#d9f943" size={20} />}
+            <Text className={`text-lg ${!selectedValue ? 'font-bold' : 'text-text-base'}`} style={!selectedValue ? { color: '#ff9100' } : {}}>Todos</Text>
+            {!selectedValue && <Check color="#ff9100" size={20} />}
           </TouchableOpacity>
           
           {options.map(opt => (
             <TouchableOpacity 
               key={opt}
               onPress={() => { onSelect(opt); setActiveMenu('main'); }}
-              className="flex-row items-center justify-between px-6 py-4 border-b border-white/5"
+              className="flex-row items-center justify-between px-6 py-4 border-b border-border-subtle"
             >
-              <Text className={`text-lg ${selectedValue === opt ? 'font-bold' : 'text-white'}`} style={selectedValue === opt ? { color: '#d9f943' } : {}}>{opt}</Text>
-              {selectedValue === opt && <Check color="#d9f943" size={20} />}
+              <Text className={`text-lg ${selectedValue === opt ? 'font-bold' : 'text-text-base'}`} style={selectedValue === opt ? { color: '#ff9100' } : {}}>{opt}</Text>
+              {selectedValue === opt && <Check color="#ff9100" size={20} />}
             </TouchableOpacity>
           ))}
           <View className="h-32" />
@@ -90,9 +90,9 @@ export default function FilterModal({ visible, onClose, onApply }: FilterModalPr
         {activeMenu === 'main' && (
           <View className="flex-1">
             {/* Header */}
-            <View className="flex-row items-center justify-between px-6 pt-16 pb-6 border-b border-white/5">
-              <Text className="text-white text-3xl font-black">Filtros</Text>
-              <TouchableOpacity onPress={onClose} className="bg-white/10 p-2 rounded-full">
+            <View className="flex-row items-center justify-between px-6 pt-16 pb-6 border-b border-border-subtle">
+              <Text className="text-text-base text-3xl font-black">Filtros</Text>
+              <TouchableOpacity onPress={onClose} className="bg-bg-panel p-2 rounded-full">
                 <X color="white" size={24} />
               </TouchableOpacity>
             </View>
@@ -105,7 +105,7 @@ export default function FilterModal({ visible, onClose, onApply }: FilterModalPr
                     <Search color="rgba(255,255,255,0.4)" size={20} />
                   </View>
                   <TextInput
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-white font-bold"
+                    className="w-full bg-bg-panel border border-border-subtle rounded-2xl py-3 pl-12 pr-4 text-text-base font-bold"
                     placeholder="Buscar por nombre..."
                     placeholderTextColor="rgba(255,255,255,0.4)"
                     value={searchQuery}
@@ -116,34 +116,34 @@ export default function FilterModal({ visible, onClose, onApply }: FilterModalPr
 
               {/* Filter Rows */}
               <View className="px-6 mb-6">
-                <TouchableOpacity onPress={() => setActiveMenu('category')} className="bg-white/5 border border-white/10 rounded-t-3xl p-5 flex-row items-center justify-between border-b-0">
-                  <Text className="text-white/70 font-bold text-lg">Categoría</Text>
+                <TouchableOpacity onPress={() => setActiveMenu('category')} className="bg-bg-panel border border-border-subtle rounded-t-3xl p-5 flex-row items-center justify-between border-b-0">
+                  <Text className="text-text-base/70 font-bold text-lg">Categoría</Text>
                   <View className="flex-row items-center gap-2">
-                    <Text className="font-bold" style={{ color: '#d9f943' }}>{selectedCategory || 'Todas'}</Text>
+                    <Text className="font-bold" style={{ color: '#ff9100' }}>{selectedCategory || 'Todas'}</Text>
                     <ChevronRight color="rgba(255,255,255,0.4)" size={20} />
                   </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => setActiveMenu('country')} className="bg-white/5 border border-white/10 p-5 flex-row items-center justify-between border-b-0">
-                  <Text className="text-white/70 font-bold text-lg">País</Text>
+                <TouchableOpacity onPress={() => setActiveMenu('country')} className="bg-bg-panel border border-border-subtle p-5 flex-row items-center justify-between border-b-0">
+                  <Text className="text-text-base/70 font-bold text-lg">País</Text>
                   <View className="flex-row items-center gap-2">
-                    <Text className="font-bold" style={{ color: '#d9f943' }}>{selectedCountry || 'Todos'}</Text>
+                    <Text className="font-bold" style={{ color: '#ff9100' }}>{selectedCountry || 'Todos'}</Text>
                     <ChevronRight color="rgba(255,255,255,0.4)" size={20} />
                   </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => setActiveMenu('language')} className="bg-white/5 border border-white/10 p-5 flex-row items-center justify-between border-b-0">
-                  <Text className="text-white/70 font-bold text-lg">Idioma</Text>
+                <TouchableOpacity onPress={() => setActiveMenu('language')} className="bg-bg-panel border border-border-subtle p-5 flex-row items-center justify-between border-b-0">
+                  <Text className="text-text-base/70 font-bold text-lg">Idioma</Text>
                   <View className="flex-row items-center gap-2">
-                    <Text className="font-bold" style={{ color: '#d9f943' }}>{selectedLanguage || 'Todos'}</Text>
+                    <Text className="font-bold" style={{ color: '#ff9100' }}>{selectedLanguage || 'Todos'}</Text>
                     <ChevronRight color="rgba(255,255,255,0.4)" size={20} />
                   </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => setActiveMenu('playlist')} className="bg-white/5 border border-white/10 rounded-b-3xl p-5 flex-row items-center justify-between">
-                  <Text className="text-white/70 font-bold text-lg">Lista de Reproducción</Text>
+                <TouchableOpacity onPress={() => setActiveMenu('playlist')} className="bg-bg-panel border border-border-subtle rounded-b-3xl p-5 flex-row items-center justify-between">
+                  <Text className="text-text-base/70 font-bold text-lg">Lista de Reproducción</Text>
                   <View className="flex-row items-center gap-2">
-                    <Text className="font-bold" style={{ color: '#d9f943' }}>{selectedPlaylist || 'Todas'}</Text>
+                    <Text className="font-bold" style={{ color: '#ff9100' }}>{selectedPlaylist || 'Todas'}</Text>
                     <ChevronRight color="rgba(255,255,255,0.4)" size={20} />
                   </View>
                 </TouchableOpacity>
@@ -153,11 +153,11 @@ export default function FilterModal({ visible, onClose, onApply }: FilterModalPr
             </ScrollView>
 
             {/* Footer Actions */}
-            <View className="absolute bottom-0 left-0 right-0 p-6 border-t border-white/10 flex-row justify-between bg-black/40">
-              <TouchableOpacity onPress={clearFilters} className="px-6 py-4 rounded-[25px] border border-white/20 items-center justify-center w-[48%]">
-                <Text className="text-white font-bold">Limpiar</Text>
+            <View className="absolute bottom-0 left-0 right-0 p-6 border-t border-border-subtle flex-row justify-between bg-black/40">
+              <TouchableOpacity onPress={clearFilters} className="px-6 py-4 rounded-[25px] border border-border-subtle items-center justify-center w-[48%]">
+                <Text className="text-text-base font-bold">Limpiar</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={onApply} className="px-6 py-4 rounded-[25px] shadow-xl flex-row items-center justify-center w-[48%] gap-2" style={{ backgroundColor: '#d9f943' }}>
+              <TouchableOpacity onPress={onApply} className="px-6 py-4 rounded-[25px] shadow-xl flex-row items-center justify-center w-[48%] gap-2" style={{ backgroundColor: '#ff9100' }}>
                 <Check color="black" size={20} />
                 <Text className="text-black font-black text-lg">Aplicar</Text>
               </TouchableOpacity>

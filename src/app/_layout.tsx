@@ -37,7 +37,7 @@ function InitialLayout() {
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: '#1e1b4b', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color="#d9f943" />
+        <ActivityIndicator size="large" color="#ff9100" />
       </View>
     );
   }
@@ -52,7 +52,7 @@ function InitialLayout() {
 export default function RootLayout() {
   return (
     <GlobalProvider>
-      <StatusBar style="light" translucent={true} backgroundColor="transparent" />
+      <StatusBar style="light" />
       <InitialLayout />
     </GlobalProvider>
   );

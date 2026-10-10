@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as SecureStore from '../utils/storage';
 
 // Set to your API URL
-export const API_URL = 'https://nubatv-api.unixxtech.online/api';
+export const API_URL = 'http://localhost:4000';
 
 export interface Channel {
   id: string;

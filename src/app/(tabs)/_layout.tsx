@@ -12,7 +12,6 @@ export default function TabLayout() {
     <View style={{ flex: 1 }}>
       
       <Tabs
-        sceneContainerStyle={{ backgroundColor: 'transparent' }}
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
@@ -29,9 +28,9 @@ export default function TabLayout() {
             overflow: 'hidden',
           },
           tabBarBackground: () => (
-            <BlurView intensity={30} tint="dark" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(30, 27, 75, 0.5)', borderColor: 'rgba(217, 248, 76, 0.3)', borderTopWidth: 2, borderRadius: 30 }]} />
+            <BlurView intensity={30} tint="dark" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(30, 27, 75, 0.5)', borderColor: 'rgba(255, 145, 0, 0.3)', borderTopWidth: 2, borderRadius: 30 }]} />
           ),
-          tabBarActiveTintColor: '#d9f943',
+          tabBarActiveTintColor: '#ff9100',
           tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.4)',
           tabBarShowLabel: false,
         }}

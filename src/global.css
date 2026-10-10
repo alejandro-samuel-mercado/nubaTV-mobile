@@ -9,11 +9,17 @@
 }
 
 :root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+  --bg-base: #02050a;
+  --bg-panel: #080402;
+  --text-base: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+}
+
+.light {
+  --bg-base: #f5f0e6;
+  --bg-panel: #ffffff;
+  --text-base: #2d1c15;
+  --text-muted: rgba(45, 28, 21, 0.65);
+  --border-subtle: rgba(45, 28, 21, 0.12);
 }

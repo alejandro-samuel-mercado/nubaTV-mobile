@@ -1,91 +1,237 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, Image, TextInput, BackHandler } from 'react-native';
 import { useGlobal, Channel } from '../../contexts/GlobalContext';
 import { useRouter } from 'expo-router';
-import { Search } from 'lucide-react-native';
+import { Search, X, ChevronRight, ChevronLeft, Tv2 } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
+import { useThemeColors } from '../../theme/colors';
 import AnimatedBackground from '../../components/AnimatedBackground';
-import FilterModal from '../../components/FilterModal';
 
 export default function ExploreScreen() {
   const { 
     channels, 
     setActiveChannel,
-    searchQuery,
-    selectedCategory,
-    selectedCountry,
-    selectedLanguage,
-    selectedPlaylist
+    playlists
   } = useGlobal();
   
   const router = useRouter();
-  const [modalVisible, setModalVisible] = useState(false);
+  const { colorScheme } = useColorScheme();
+  const theme = useThemeColors(colorScheme);
 
-  const filteredChannels = useMemo(() => {
-    return channels.filter(c => {
-      const matchSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchCountry = selectedCountry ? c.country === selectedCountry : true;
-      const matchCategory = selectedCategory ? c.category?.name === selectedCategory : true;
-      const matchLanguage = selectedLanguage ? c.language === selectedLanguage : true;
-      const matchPlaylist = selectedPlaylist ? c.playlist?.name === selectedPlaylist : true;
-      
-      return matchSearch && matchCountry && matchCategory && matchLanguage && matchPlaylist;
-    });
-  }, [channels, searchQuery, selectedCountry, selectedCategory, selectedLanguage, selectedPlaylist]);
+  const [explorerType, setExplorerType] = useState<'category' | 'country' | 'language' | 'playlist' | null>(null);
+  const [explorerValue, setExplorerValue] = useState<string | null>(null);
+  const [localSearch, setLocalSearch] = useState('');
+
+  const categories = useMemo(() => Array.from(new Set(channels.map(c => c.category?.name).filter(Boolean))).sort() as string[], [channels]);
+  const countries = useMemo(() => Array.from(new Set(channels.map(c => c.country).filter(Boolean))).sort() as string[], [channels]);
+
+  // Handle hardware back button on Android
+  React.useEffect(() => {
+    const backAction = () => {
+      if (explorerValue) {
+        setExplorerValue(null);
+        setLocalSearch('');
+        return true;
+      }
+      if (explorerType) {
+        setExplorerType(null);
+        setLocalSearch('');
+        return true;
+      }
+      return false;
+    };
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [explorerType, explorerValue]);
 
   const handlePlay = (channel: Channel) => {
     setActiveChannel(channel);
     router.push(`/player`);
   };
 
+  const renderExplorerTypes = () => (
+    <ScrollView className="flex-1 px-6 pt-4" contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+     
+      <TouchableOpacity onPress={() => { setExplorerType('category'); setLocalSearch(''); }} className="w-full mb-3 rounded-2xl p-5 flex-row items-center justify-between border" style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}>
+        <Text className="font-bold text-lg" style={{ color: theme.textPrimary }}>Categorías</Text>
+        <ChevronRight color={theme.textSecondary} size={20} />
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => { setExplorerType('country'); setLocalSearch(''); }} className="w-full mb-3 rounded-2xl p-5 flex-row items-center justify-between border" style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}>
+        <Text className="font-bold text-lg" style={{ color: theme.textPrimary }}>Países</Text>
+        <ChevronRight color={theme.textSecondary} size={20} />
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => { setExplorerType('language'); setLocalSearch(''); }} className="w-full mb-3 rounded-2xl p-5 flex-row items-center justify-between border" style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}>
+        <Text className="font-bold text-lg" style={{ color: theme.textPrimary }}>Idiomas</Text>
+        <ChevronRight color={theme.textSecondary} size={20} />
+      </TouchableOpacity>
+
+      {playlists.length > 0 && (
+        <TouchableOpacity onPress={() => { setExplorerType('playlist'); setLocalSearch(''); }} className="w-full mb-3 rounded-2xl p-5 flex-row items-center justify-between border" style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}>
+          <Text className="font-bold text-lg" style={{ color: theme.textPrimary }}>Listas de Reproducción</Text>
+          <ChevronRight color={theme.textSecondary} size={20} />
+        </TouchableOpacity>
+      )}
+    </ScrollView>
+  );
+
+  const renderValuesList = () => {
+    let items: string[] = [];
+    if (explorerType === 'category') items = categories;
+    if (explorerType === 'country') items = countries;
+    if (explorerType === 'language') items = Array.from(new Set(channels.map(c => c.language).filter(Boolean))).sort() as string[];
+    if (explorerType === 'playlist') items = playlists;
+
+    const filteredItems = items.filter(item => item.toLowerCase().includes(localSearch.toLowerCase()));
+    const title = explorerType === 'category' ? 'Categorías' : explorerType === 'country' ? 'Países' : explorerType === 'language' ? 'Idiomas' : 'Listas';
+
+    return (
+      <View className="flex-1">
+        <View className="px-6 mb-4 flex-row items-center">
+          <TouchableOpacity onPress={() => { setExplorerType(null); setLocalSearch(''); }} className="mr-4 p-2 rounded-full" style={{ backgroundColor: theme.bgPanel }}>
+            <ChevronLeft color={theme.textPrimary} size={24} />
+          </TouchableOpacity>
+          <Text className="text-2xl font-black" style={{ color: theme.textPrimary }}>{title}</Text>
+        </View>
+
+        <View className="px-6 mb-4 relative">
+          <View className="absolute left-10 top-3.5 z-10">
+            <Search color={theme.textSecondary} size={16} />
+          </View>
+          <TextInput
+            className="w-full rounded-xl py-3 pl-12 pr-4 border font-bold"
+            style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle, color: theme.textPrimary }}
+            placeholder={`Buscar ${title.toLowerCase()}...`}
+            placeholderTextColor={theme.textSecondary}
+            value={localSearch}
+            onChangeText={setLocalSearch}
+          />
+        </View>
+
+        <FlatList
+          className="flex-1 px-6"
+          contentContainerStyle={{ paddingBottom: 120 }}
+          showsVerticalScrollIndicator={false}
+          data={filteredItems}
+          keyExtractor={(item) => item}
+          initialNumToRender={20}
+          maxToRenderPerBatch={20}
+          windowSize={10}
+          renderItem={({ item }) => {
+            const count = channels.filter(c => 
+              (explorerType === 'category' && c.category?.name === item) ||
+              (explorerType === 'country' && c.country === item) ||
+              (explorerType === 'language' && c.language === item) ||
+              (explorerType === 'playlist' && c.playlist?.name === item)
+            ).length;
+
+            return (
+              <TouchableOpacity 
+                onPress={() => { setExplorerValue(item); setLocalSearch(''); }}
+                className="w-full mb-3 rounded-xl p-4 flex-row items-center justify-between border"
+                style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}
+              >
+                <Text className="font-bold text-base" style={{ color: theme.textPrimary }}>{item}</Text>
+                <View className="px-3 py-1 rounded-md" style={{ backgroundColor: theme.bgBase }}>
+                  <Text className="text-xs font-mono font-bold" style={{ color: theme.textSecondary }}>{count}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+          ListEmptyComponent={
+            <Text className="text-center mt-8 font-bold" style={{ color: theme.textSecondary }}>No se encontraron resultados.</Text>
+          }
+        />
+      </View>
+    );
+  };
+
+  const renderChannelsList = () => {
+    const listChannels = channels.filter(c => {
+      const matchSearch = c.name.toLowerCase().includes(localSearch.toLowerCase());
+      const matchType = 
+        (explorerType === 'category' && c.category?.name === explorerValue) ||
+        (explorerType === 'country' && c.country === explorerValue) ||
+        (explorerType === 'language' && c.language === explorerValue) ||
+        (explorerType === 'playlist' && c.playlist?.name === explorerValue);
+      return matchSearch && matchType;
+    });
+
+    return (
+      <View className="flex-1">
+        <View className="px-6 mb-4 flex-row items-center">
+          <TouchableOpacity onPress={() => { setExplorerValue(null); setLocalSearch(''); }} className="mr-4 p-2 rounded-full" style={{ backgroundColor: theme.bgPanel }}>
+            <ChevronLeft color={theme.textPrimary} size={24} />
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="text-xl font-black" style={{ color: theme.textPrimary }} numberOfLines={1}>{explorerValue}</Text>
+            <Text className="text-xs font-bold" style={{ color: theme.accent }}>{listChannels.length} canales</Text>
+          </View>
+        </View>
+
+        <View className="px-6 mb-4 relative">
+          <View className="absolute left-10 top-3.5 z-10">
+            <Search color={theme.textSecondary} size={16} />
+          </View>
+          <TextInput
+            className="w-full rounded-xl py-3 pl-12 pr-4 border font-bold"
+            style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle, color: theme.textPrimary }}
+            placeholder="Buscar canal..."
+            placeholderTextColor={theme.textSecondary}
+            value={localSearch}
+            onChangeText={setLocalSearch}
+          />
+        </View>
+
+        <FlatList
+          className="flex-1 px-6"
+          contentContainerStyle={{ paddingBottom: 120 }}
+          showsVerticalScrollIndicator={false}
+          data={listChannels}
+          keyExtractor={(item) => item.id}
+          initialNumToRender={20}
+          maxToRenderPerBatch={20}
+          windowSize={10}
+          renderItem={({ item: channel }) => (
+            <TouchableOpacity 
+              onPress={() => handlePlay(channel)}
+              className="w-full mb-3 rounded-2xl p-3 flex-row items-center border"
+              style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}
+            >
+              <View className="w-12 h-12 rounded-xl items-center justify-center mr-4 border" style={{ backgroundColor: theme.bgBase, borderColor: theme.borderSubtle, overflow: 'hidden' }}>
+                {channel.logo ? (
+                  <Image source={{ uri: channel.logo }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                ) : (
+                  <Tv2 size={20} color={theme.textSecondary} />
+                )}
+              </View>
+              <View className="flex-1">
+                <Text className="text-sm font-bold mb-1" style={{ color: theme.textPrimary }} numberOfLines={1}>{channel.name}</Text>
+                <Text className="text-[10px] uppercase tracking-widest font-bold" style={{ color: theme.textSecondary }} numberOfLines={1}>{channel.country || 'Desconocido'}</Text>
+              </View>
+              <ChevronRight color={theme.textSecondary} size={20} />
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <Text className="text-center mt-8 font-bold" style={{ color: theme.textSecondary }}>No se encontraron canales.</Text>
+          }
+        />
+      </View>
+    );
+  };
+
   return (
     <View className="flex-1">
       <AnimatedBackground />
 
-      <FilterModal 
-        visible={modalVisible} 
-        onClose={() => setModalVisible(false)} 
-        onApply={() => setModalVisible(false)} 
-      />
-
-      <View className="px-6 mt-16 mb-6 flex-row items-center justify-between">
-        <Text className="text-4xl font-black text-white tracking-tighter">Explorar</Text>
-        <TouchableOpacity onPress={() => setModalVisible(true)} className="bg-white/10 p-3 rounded-full border border-white/20 flex-row items-center gap-2">
-          <Search color="white" size={20} />
-          {(searchQuery || selectedCategory || selectedCountry || selectedLanguage || selectedPlaylist) && (
-            <View className="w-3 h-3 rounded-full absolute right-2 top-2 border-2 border-transparent" style={{ backgroundColor: '#d9f943' }} />
-          )}
-        </TouchableOpacity>
+      <View className="px-6 mt-16 mb-2">
+        <Text className="text-4xl font-black tracking-tighter" style={{ color: theme.textPrimary }}>Explorar</Text>
       </View>
 
-      <ScrollView className="flex-1 px-6 pb-24" showsVerticalScrollIndicator={false}>
-        <View className="flex-row flex-wrap justify-between">
-          {filteredChannels.length === 0 ? (
-            <View className="w-full mt-12 items-center justify-center">
-              <Text className="text-white/40 text-center font-bold">No se encontraron canales con estos filtros.</Text>
-            </View>
-          ) : (
-            filteredChannels.map(channel => (
-              <View key={channel.id} className="w-[48%] mb-4 rounded-3xl overflow-hidden bg-white/5 border border-white/10" style={{ height: 140 }}>
-                <TouchableOpacity 
-                  onPress={() => handlePlay(channel)}
-                  className="flex-1 p-4 items-center justify-center"
-                >
-                  {channel.logo ? (
-                    <Image source={{ uri: channel.logo }} className="w-16 h-16 mb-3" resizeMode="contain" />
-                  ) : (
-                    <View className="w-16 h-16 mb-3 rounded-full bg-white/10 items-center justify-center border border-white/5">
-                      <Text className="text-white/30 font-black text-2xl">{channel.name.charAt(0)}</Text>
-                    </View>
-                  )}
-                  <Text className="text-white text-xs font-bold text-center" numberOfLines={2}>{channel.name}</Text>
-                  <Text className="text-white/40 text-[10px] mt-1 text-center" numberOfLines={1}>{channel.category?.name || 'General'}</Text>
-                </TouchableOpacity>
-              </View>
-            ))
-          )}
-        </View>
-        <View className="h-32" />
-      </ScrollView>
+      {!explorerType && renderExplorerTypes()}
+      {explorerType && !explorerValue && renderValuesList()}
+      {explorerType && explorerValue && renderChannelsList()}
     </View>
   );
 }

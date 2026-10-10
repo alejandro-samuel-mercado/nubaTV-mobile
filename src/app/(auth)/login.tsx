@@ -45,12 +45,12 @@ export default function LoginScreen() {
           <Text className="text-4xl font-black tracking-tighter text-transparent" style={{ color: 'white' }}>
             Nuba<Text className="text-cyan-500">TV</Text>
           </Text>
-          <Text className="text-white/50 font-bold mt-2 text-center text-sm">
+          <Text className="text-text-base/50 font-bold mt-2 text-center text-sm">
             Disfruta del mejor contenido en tu celular
           </Text>
         </View>
 
-        <View className="bg-white/5 p-6 rounded-3xl border border-white/10">
+        <View className="bg-bg-panel p-6 rounded-3xl border border-border-subtle">
           {error ? (
             <View className="bg-red-500/20 border border-red-500/50 p-3 rounded-xl mb-4">
               <Text className="text-red-300 font-bold text-center text-xs">{error}</Text>
@@ -59,9 +59,9 @@ export default function LoginScreen() {
 
           <View className="space-y-4">
             <View>
-              <Text className="text-white/40 text-xs font-bold uppercase tracking-widest mb-2">Usuario</Text>
+              <Text className="text-text-base/40 text-xs font-bold uppercase tracking-widest mb-2">Usuario</Text>
               <TextInput
-                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white font-bold"
+                className="w-full bg-black/40 border border-border-subtle rounded-xl py-3 px-4 text-text-base font-bold"
                 placeholder="Tu usuario"
                 placeholderTextColor="rgba(255,255,255,0.3)"
                 value={username}
@@ -71,9 +71,9 @@ export default function LoginScreen() {
             </View>
 
             <View className="mt-4">
-              <Text className="text-white/40 text-xs font-bold uppercase tracking-widest mb-2">Contraseña</Text>
+              <Text className="text-text-base/40 text-xs font-bold uppercase tracking-widest mb-2">Contraseña</Text>
               <TextInput
-                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white font-bold"
+                className="w-full bg-black/40 border border-border-subtle rounded-xl py-3 px-4 text-text-base font-bold"
                 placeholder="••••••••"
                 placeholderTextColor="rgba(255,255,255,0.3)"
                 value={password}
@@ -90,7 +90,7 @@ export default function LoginScreen() {
               {isLoading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text className="text-white font-black text-lg">Ingresar</Text>
+                <Text className="text-text-base font-black text-lg">Ingresar</Text>
               )}
             </TouchableOpacity>
           </View>

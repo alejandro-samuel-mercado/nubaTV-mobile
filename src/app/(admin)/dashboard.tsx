@@ -74,15 +74,15 @@ export default function AdminDashboard() {
     <ScrollView className="flex-1 bg-[#02050a] p-4">
       {/* Stats */}
       <View className="flex-row flex-wrap justify-between mb-8">
-        <View className="w-[48%] bg-white/5 p-4 rounded-2xl border border-white/10 mb-4 items-center">
+        <View className="w-[48%] bg-bg-panel p-4 rounded-2xl border border-border-subtle mb-4 items-center">
           <Users color="#06b6d4" size={24} className="mb-2" />
-          <Text className="text-white text-2xl font-black">{stats?.usersCount || 0}</Text>
-          <Text className="text-white/40 text-xs font-bold uppercase">Usuarios</Text>
+          <Text className="text-text-base text-2xl font-black">{stats?.usersCount || 0}</Text>
+          <Text className="text-text-base/40 text-xs font-bold uppercase">Usuarios</Text>
         </View>
-        <View className="w-[48%] bg-white/5 p-4 rounded-2xl border border-white/10 mb-4 items-center">
+        <View className="w-[48%] bg-bg-panel p-4 rounded-2xl border border-border-subtle mb-4 items-center">
           <ListVideo color="#3b82f6" size={24} className="mb-2" />
-          <Text className="text-white text-2xl font-black">{channels.length}</Text>
-          <Text className="text-white/40 text-xs font-bold uppercase">Canales Activos</Text>
+          <Text className="text-text-base text-2xl font-black">{channels.length}</Text>
+          <Text className="text-text-base/40 text-xs font-bold uppercase">Canales Activos</Text>
         </View>
       </View>
 
@@ -98,13 +98,13 @@ export default function AdminDashboard() {
       </View>
 
       {/* Playlists */}
-      <Text className="text-white font-bold text-xl mb-4">Listas Instaladas</Text>
-      <View className="bg-white/5 rounded-2xl overflow-hidden border border-white/10 mb-8">
+      <Text className="text-text-base font-bold text-xl mb-4">Listas Instaladas</Text>
+      <View className="bg-bg-panel rounded-2xl overflow-hidden border border-border-subtle mb-8">
         {playlists.map((pl, i) => (
-          <View key={pl.id} className={`p-4 flex-row justify-between items-center ${i !== playlists.length-1 ? 'border-b border-white/5' : ''}`}>
+          <View key={pl.id} className={`p-4 flex-row justify-between items-center ${i !== playlists.length-1 ? 'border-b border-border-subtle' : ''}`}>
             <View>
-              <Text className="text-white font-bold">{pl.name}</Text>
-              <Text className="text-white/40 text-xs">{pl._count?.channels || 0} canales</Text>
+              <Text className="text-text-base font-bold">{pl.name}</Text>
+              <Text className="text-text-base/40 text-xs">{pl._count?.channels || 0} canales</Text>
             </View>
             <TouchableOpacity onPress={() => handleDeletePlaylist(pl.id, pl.name)} className="p-2 bg-red-500/10 rounded-full">
               <Trash2 color="#ef4444" size={20} />
@@ -113,7 +113,7 @@ export default function AdminDashboard() {
         ))}
         {playlists.length === 0 && (
           <View className="p-6 items-center">
-            <Text className="text-white/40 font-bold">No hay listas instaladas.</Text>
+            <Text className="text-text-base/40 font-bold">No hay listas instaladas.</Text>
           </View>
         )}
       </View>
