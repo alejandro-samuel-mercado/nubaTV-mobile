@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as SecureStore from '../utils/storage';
 
 // Set to your API URL
-export const API_URL = 'http://localhost:4000';
+export const API_URL = 'http://localhost:4000/api';
 
 export interface Channel {
   id: string;

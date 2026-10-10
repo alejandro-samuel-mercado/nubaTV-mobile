@@ -44,5 +44,6 @@ export const LIGHT = {
 export type ThemeColors = typeof DARK;
 
 export function useThemeColors(colorScheme: string | undefined | null): ThemeColors {
-  return colorScheme === 'light' ? LIGHT : DARK;
+  // El tema por defecto es oscuro, ignoramos el tema del sistema (light).
+  return DARK;
 }

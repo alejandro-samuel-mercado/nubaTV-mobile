@@ -1,10 +1,9 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
-import { GlobalProvider, useGlobal } from '../contexts/GlobalContext';
-import { useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
-import '../global.css';
 import { StatusBar } from 'expo-status-bar';
-import AnimatedBackground from '../components/AnimatedBackground';
+import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { GlobalProvider, useGlobal } from '../contexts/GlobalContext';
+import '../global.css';
 
 function InitialLayout() {
   const { user, token, loading } = useGlobal();
@@ -49,11 +48,14 @@ function InitialLayout() {
   );
 }
 
+
 export default function RootLayout() {
   return (
-    <GlobalProvider>
-      <StatusBar style="light" />
-      <InitialLayout />
-    </GlobalProvider>
+    <ThemeProvider value={DarkTheme}>
+      <GlobalProvider>
+        <StatusBar style="light" />
+        <InitialLayout />
+      </GlobalProvider>
+    </ThemeProvider>
   );
 }
