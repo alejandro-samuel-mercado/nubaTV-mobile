@@ -59,7 +59,7 @@ export default function LoginScreen() {
 
           <View className="space-y-4">
             <View>
-              <Text className="text-text-base/40 text-xs font-bold uppercase tracking-widest mb-2">Usuario</Text>
+              <Text className="text-text-base text-xs font-bold uppercase tracking-widest mb-2">Usuario</Text>
               <TextInput
                 className="w-full bg-black/40 border border-border-subtle rounded-xl py-3 px-4 text-text-base font-bold"
                 placeholder="Tu usuario"
@@ -71,7 +71,7 @@ export default function LoginScreen() {
             </View>
 
             <View className="mt-4">
-              <Text className="text-text-base/40 text-xs font-bold uppercase tracking-widest mb-2">Contraseña</Text>
+              <Text className="text-text-base text-xs font-bold uppercase tracking-widest mb-2">Contraseña</Text>
               <TextInput
                 className="w-full bg-black/40 border border-border-subtle rounded-xl py-3 px-4 text-text-base font-bold"
                 placeholder="••••••••"

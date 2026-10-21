@@ -1,17 +1,14 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
 import { useGlobal, Channel } from '../../contexts/GlobalContext';
 import { useRouter } from 'expo-router';
 import { Heart } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-import { useThemeColors } from '../../theme/colors';
-import AnimatedBackground from '../../components/AnimatedBackground';
+import { useAppTheme } from '../../contexts/SettingsContext';
 
 export default function FavoritesScreen() {
   const { channels, favorites, setActiveChannel } = useGlobal();
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
-  const theme = useThemeColors(colorScheme);
+  const theme = useAppTheme();
 
   const favoriteChannels = channels.filter(c => favorites.includes(c.id));
 
@@ -21,38 +18,50 @@ export default function FavoritesScreen() {
   };
 
   return (
-    <View className="flex-1">
-      <AnimatedBackground />
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+      <StatusBar barStyle={theme.statusBar} backgroundColor={theme.bg} />
 
-      <View className="px-6 mt-16 mb-6">
-        <Text className="text-4xl font-black tracking-tighter" style={{ color: theme.textPrimary }}>Favoritos</Text>
-      </View>
-
-      <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1, paddingHorizontal: 16 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
         {favoriteChannels.length === 0 ? (
-          <View className="mt-20 items-center justify-center">
-            <View className="w-24 h-24 rounded-full items-center justify-center mb-6 border" style={{ backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}>
-              <Heart color={theme.textSecondary} size={40} />
+          <View style={{ marginTop: 80, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{
+              width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center',
+              marginBottom: 20, backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.cardBorder,
+            }}>
+              <Heart color={theme.textSub} size={38} />
             </View>
-            <Text className="text-xl font-bold mb-2" style={{ color: theme.textPrimary }}>Sin favoritos aún</Text>
-            <Text className="text-center px-8" style={{ color: theme.textSecondary }}>Explora canales y márcalos como favoritos para verlos aquí.</Text>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: theme.text, marginBottom: 8 }}>Sin favoritos aún</Text>
+            <Text style={{ textAlign: 'center', paddingHorizontal: 32, color: theme.textSub, lineHeight: 20 }}>
+              Explora canales y márcalos como favoritos para verlos aquí.
+            </Text>
           </View>
         ) : (
-          <View className="flex-row flex-wrap justify-between">
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
             {favoriteChannels.map(channel => (
-              <View key={channel.id} className="w-[48%] mb-4 rounded-3xl overflow-hidden border" style={{ height: 140, backgroundColor: theme.bgPanel, borderColor: theme.borderSubtle }}>
-                <TouchableOpacity 
-                  onPress={() => handlePlay(channel)}
-                  className="flex-1 p-4 items-center justify-center"
-                >
+              <View key={channel.id} style={{
+                width: '48%', marginBottom: 14, borderRadius: 20, overflow: 'hidden',
+                height: 130, backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.cardBorder,
+              }}>
+                <TouchableOpacity onPress={() => handlePlay(channel)} style={{ flex: 1, padding: 14, alignItems: 'center', justifyContent: 'center' }}>
                   {channel.logo ? (
-                    <Image source={{ uri: channel.logo }} className="w-16 h-16 mb-3 rounded-full border" style={{ borderColor: theme.borderSubtle }} resizeMode="cover" />
+                    <Image source={{ uri: channel.logo }} style={{ width: 56, height: 56, marginBottom: 10, borderRadius: 28 }} resizeMode="cover" />
                   ) : (
-                    <View className="w-16 h-16 mb-3 rounded-full items-center justify-center border" style={{ backgroundColor: theme.bgCard, borderColor: theme.borderSubtle }}>
-                      <Text className="font-black text-2xl opacity-30" style={{ color: theme.textPrimary }}>{channel.name.charAt(0)}</Text>
+                    <View style={{
+                      width: 56, height: 56, marginBottom: 10, borderRadius: 28,
+                      backgroundColor: theme.iconBg, alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Text style={{ fontWeight: '900', fontSize: 22, opacity: 0.4, color: theme.text }}>
+                        {channel.name.charAt(0)}
+                      </Text>
                     </View>
                   )}
-                  <Text className="text-xs font-bold text-center" style={{ color: theme.textPrimary }} numberOfLines={2}>{channel.name}</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '700', textAlign: 'center', color: theme.text }} numberOfLines={2}>
+                    {channel.name}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ))}

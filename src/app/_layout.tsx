@@ -4,12 +4,14 @@ import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { GlobalProvider, useGlobal } from '../contexts/GlobalContext';
+import { SettingsProvider, useAppTheme } from '../contexts/SettingsContext';
 import '../global.css';
 
 function InitialLayout() {
   const { user, token, loading } = useGlobal();
   const segments = useSegments();
   const router = useRouter();
+  const theme = useAppTheme();
 
   useEffect(() => {
     if (loading) return;
@@ -36,14 +38,15 @@ function InitialLayout() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#1e1b4b', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color="#ff9100" />
+      <View style={{ flex: 1, backgroundColor: theme.bg, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={theme.accent} />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#020512' }}>
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+      <StatusBar style={theme.statusBar === 'dark-content' ? 'dark' : 'light'} />
       <Slot />
     </View>
   );
@@ -59,8 +62,9 @@ export default function RootLayout() {
 
   return (
     <GlobalProvider>
-      <StatusBar style="light" />
-      <InitialLayout />
+      <SettingsProvider>
+        <InitialLayout />
+      </SettingsProvider>
     </GlobalProvider>
   );
 }

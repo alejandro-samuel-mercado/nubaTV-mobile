@@ -4,13 +4,13 @@
 
 @layer base {
   body {
-    background-color: #02050a;
+    background-color: #0d0d0d;
   }
 }
 
 :root {
-  --bg-base: #02050a;
-  --bg-panel: #080402;
+  --bg-base: #0d0d0d;
+  --bg-panel: #0d0d0d;
   --text-base: #ffffff;
   --text-muted: rgba(255, 255, 255, 0.6);
   --border-subtle: rgba(255, 255, 255, 0.1);

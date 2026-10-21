@@ -1,85 +1,221 @@
-import { Tabs } from 'expo-router';
-import { Home, Compass, Heart, User as UserIcon } from 'lucide-react-native';
-import { View, StyleSheet, Platform } from 'react-native';
-import { useGlobal } from '../../contexts/GlobalContext';
-import AnimatedBackground from '../../components/AnimatedBackground';
-import { BlurView } from 'expo-blur';
+import { BlurView } from "expo-blur";
+import { Tabs } from "expo-router";
+import { Bookmark, Compass, Home, Settings, Tv2 } from "lucide-react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSettings } from "../../contexts/SettingsContext";
+import { isLightBackground } from "../../services/appSettings";
 
-export default function TabLayout() {
-  const { user } = useGlobal();
+function CustomTabBar({ state, descriptors, navigation }: any) {
+  const { settings } = useSettings();
+  const isLight = isLightBackground(settings.backgroundColor);
+  const accent = settings.accentColor;
+  const inactiveColor = isLight ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.7)";
 
   return (
-    <View style={{ flex: 1 }}>
-      
+    <View style={styles.tabBarContainer}>
+      <BlurView
+        intensity={Platform.OS === "ios" ? 40 : 50}
+        tint={isLight ? "light" : "dark"}
+        blurMethod="dimezisBlurView"
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={styles.tabBarRow}>
+        {state.routes.map((route: any, index: number) => {
+          if (route.name === "favorites") return null;
+          const { options } = descriptors[route.key];
+          if (options?.href === null) return null;
+
+          const isFocused = state.index === index;
+          const label =
+            options.title !== undefined ? options.title : route.name;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          const IconComponent =
+            route.name === "index"
+              ? Home
+              : route.name === "tv"
+                ? Tv2
+                : route.name === "explore"
+                  ? Compass
+                  : route.name === "profile"
+                    ? Bookmark
+                    : Settings;
+
+          const iconColor = isFocused ? accent : inactiveColor;
+          const textColor = isFocused ? accent : inactiveColor;
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              onPress={onPress}
+              activeOpacity={0.7}
+              style={styles.tabBtn}
+            >
+              <View
+                style={[
+                  styles.iconBox,
+                  isFocused && { backgroundColor: `${accent}28` },
+                ]}
+              >
+                <IconComponent size={24} color={iconColor} />
+              </View>
+              <Text style={[styles.tabLabel, { color: textColor }]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+export default function TabLayout() {
+  const { settings } = useSettings();
+  return (
+    <View style={{ flex: 1, backgroundColor: settings.backgroundColor }}>
       <Tabs
+        tabBar={(props) => <CustomTabBar {...props} />}
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
-            position: 'absolute',
+            position: "absolute",
             bottom: 0,
             left: 0,
             right: 0,
-            height: 70,
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            borderTopWidth: 0,
-            backgroundColor: 'transparent',
             elevation: 0,
-            overflow: 'hidden',
+            borderTopWidth: 0,
+            backgroundColor: "transparent",
           },
-          tabBarBackground: () => (
-            <BlurView intensity={30} tint="dark" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(30, 27, 75, 0.5)', borderColor: 'rgba(255, 145, 0, 0.3)', borderTopWidth: 2, borderRadius: 30 }]} />
-          ),
-          tabBarActiveTintColor: '#ff9100',
-          tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.4)',
-          tabBarShowLabel: false,
         }}
       >
+        {/* INICIO */}
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Inicio',
-            tabBarIcon: ({ color, size, focused }) => (
-              <View style={focused ? { backgroundColor: 'rgba(217, 248, 67, 0.1)', padding: 10, borderRadius: 20 } : { padding: 10 }}>
-                <Home color={color} size={size} />
-              </View>
-            ),
+            title: "Inicio",
           }}
         />
+
+        {/* TV – canales IPTV */}
+        <Tabs.Screen
+          name="tv"
+          options={{
+            title: "Tv",
+          }}
+        />
+
+        {/* EXPLORAR – VOD (no visible en tab bar, se accede desde menú hamburguesa) */}
         <Tabs.Screen
           name="explore"
           options={{
-            title: 'Explorar',
-            tabBarIcon: ({ color, size, focused }) => (
-              <View style={focused ? { backgroundColor: 'rgba(217, 248, 67, 0.1)', padding: 10, borderRadius: 20 } : { padding: 10 }}>
-                <Compass color={color} size={size} />
-              </View>
-            ),
+            href: null,
           }}
         />
+
+        {/* FAVORITOS (Oculto de la barra inferior) */}
         <Tabs.Screen
           name="favorites"
           options={{
-            title: 'Favoritos',
-            tabBarIcon: ({ color, size, focused }) => (
-              <View style={focused ? { backgroundColor: 'rgba(217, 248, 67, 0.1)', padding: 10, borderRadius: 20 } : { padding: 10 }}>
-                <Heart color={color} size={size} />
-              </View>
-            ),
+            href: null,
           }}
         />
+
+        {/* MI LISTA */}
         <Tabs.Screen
           name="profile"
           options={{
-            title: 'Mi Perfil',
-            tabBarIcon: ({ color, size, focused }) => (
-              <View style={focused ? { backgroundColor: 'rgba(217, 248, 67, 0.1)', padding: 10, borderRadius: 20 } : { padding: 10 }}>
-                <UserIcon color={color} size={size} />
-              </View>
-            ),
+            title: "Mi lista",
+          }}
+        />
+
+        {/* AJUSTES */}
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: "Ajustes",
           }}
         />
       </Tabs>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarContainer: {
+    position: "absolute",
+    bottom: 50,
+    left: 20,
+    right: 20,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.16)",
+    backgroundColor: "rgba(18, 18, 24, 0.45)",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    overflow: "hidden",
+    ...(Platform.OS === "web"
+      ? ({
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        } as any)
+      : {}),
+  },
+  tabBarBlur: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  tabBarRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingHorizontal: 8,
+  },
+  tabBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 4,
+  },
+  iconBox: {
+    width: 44,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconBoxActive: {
+    backgroundColor: "rgba(229,9,20,0.22)",
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.2,
+    marginTop: 5,
+    textAlign: "center",
+  },
+});

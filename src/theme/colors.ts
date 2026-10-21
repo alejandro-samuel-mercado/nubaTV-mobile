@@ -5,9 +5,9 @@
 
 export const DARK = {
   // Backgrounds
-  bgBase:       '#080808',   // Match web --bg-base
-  bgPanel:      '#0a0502',   // Match web --bg-panel
-  bgCard:       '#1a100a',   // Slightly lighter than panel
+  bgBase:       '#0d0d0d',   // #0d0d0d background requested by user
+  bgPanel:      '#0d0d0d',   // Match #0d0d0d
+  bgCard:       '#161616',   // Card background slightly lighter
 
   // Text
   textPrimary:  '#ffffff',   // Pure white
