@@ -57,6 +57,9 @@ interface GlobalContextType {
   
   favorites: string[];
   toggleFavorite: (id: string) => void;
+
+  miniPlayerAllowed: boolean;
+  setMiniPlayerAllowed: (v: boolean) => void;
   
   loading: boolean;
   loadingChannels: boolean;
@@ -81,6 +84,7 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
 
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [miniPlayerAllowed, setMiniPlayerAllowed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingChannels, setLoadingChannels] = useState(true);
 
@@ -140,16 +144,8 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
       
       setChannels(activeChannels);
       
-      // Select random initial channel from default playlists or all if none
-      const defaultPlaylists = Array.from(new Set(activeChannels.filter((c: Channel) => c.playlist?.isDefault).map((c: Channel) => c.playlist?.name).filter(Boolean))) as string[];
-      const initialChannels = defaultPlaylists.length > 0 
-        ? activeChannels.filter((c: Channel) => defaultPlaylists.includes(c.playlist?.name as string))
-        : activeChannels;
-        
-      if (initialChannels.length > 0 && !activeChannel) {
-        const randomIndex = Math.floor(Math.random() * initialChannels.length);
-        setActiveChannel(initialChannels[randomIndex]);
-      }
+      // Do NOT auto-select here; tv.tsx handles initial selection when the
+      // TV tab is focused, so we avoid random channel changes on re-fetches.
     } catch (error) {
       console.log('Error fetching channels:', error);
     } finally {
@@ -194,6 +190,7 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
       selectedCountry, setSelectedCountry,
       selectedLanguage, setSelectedLanguage,
       favorites, toggleFavorite,
+      miniPlayerAllowed, setMiniPlayerAllowed,
       loading, fetchChannels, loadingChannels
     }}>
       {children}

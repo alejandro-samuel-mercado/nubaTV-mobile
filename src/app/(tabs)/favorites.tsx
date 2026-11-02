@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import Image from '../../components/FastImage';
 import { useGlobal, Channel } from '../../contexts/GlobalContext';
 import { useRouter } from 'expo-router';
 import { Heart } from 'lucide-react-native';

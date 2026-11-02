@@ -34,6 +34,7 @@ export interface AppSettings {
   accentColor: AccentColor;
   backgroundColor: BackgroundColor;
   autoplayNext: boolean;
+  miniPlayerEnabled: boolean;
   notifyNewContent: boolean;
   notifyRecommendations: boolean;
   notifyAppUpdates: boolean;
@@ -48,6 +49,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   accentColor: '#e50914',
   backgroundColor: '#0d0d0d',
   autoplayNext: true,
+  miniPlayerEnabled: true,
   notifyNewContent: true,
   notifyRecommendations: false,
   notifyAppUpdates: true,

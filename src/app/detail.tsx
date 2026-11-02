@@ -1,3 +1,4 @@
+import Image from '../components/FastImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -13,7 +14,6 @@ import { isInMyList, toggleMyList } from '../services/myList';
 import {
       ActivityIndicator,
       Dimensions,
-      Image,
       NativeScrollEvent,
       NativeSyntheticEvent,
       ScrollView,

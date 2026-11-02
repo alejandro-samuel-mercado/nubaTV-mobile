@@ -1,11 +1,11 @@
-import { useRouter } from "expo-router";
+import Image from "../../components/FastImage";
+import { useIsFocused, useRouter } from "expo-router";
 import { Heart, List, Maximize2, Search, Tv2, X } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  Image,
   Platform,
   ScrollView,
   StatusBar,
@@ -37,7 +37,21 @@ export default function TvScreen() {
     favorites,
     toggleFavorite,
     loadingChannels,
+    setMiniPlayerAllowed,
   } = useGlobal();
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (isFocused) {
+      // Mark that the user has visited TV → mini player can appear when they leave
+      setMiniPlayerAllowed(true);
+    } else {
+      // Pause web video immediately when losing focus
+      if (Platform.OS === "web") {
+        webVideoRef.current?.pause?.();
+      }
+    }
+  }, [isFocused]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
@@ -46,6 +60,7 @@ export default function TvScreen() {
   const [playlistSel, setPlaylistSel] = useState("__default__");
   const searchRef = useRef<TextInput>(null);
   const webVideoRef = useRef<any>(null);
+  const hlsRef = useRef<any>(null);
   const nativeVideoRef = useRef<any>(null);
   const [nativeIsPlaying, setNativeIsPlaying] = useState(true);
   const [nativeIsBuffering, setNativeIsBuffering] = useState(true);
@@ -69,28 +84,44 @@ export default function TvScreen() {
     const video = webVideoRef.current;
     let hls: any;
     (async () => {
+      // Destroy previous HLS instance
+      if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+      video.pause();
       try {
         const mod: any = await import("hls.js");
         const Hls = mod.default;
         if (Hls?.isSupported()) {
-          hls = new Hls();
+          hls = new Hls({ enableWorker: false });
+          hlsRef.current = hls;
           hls.loadSource(streamUrl);
           hls.attachMedia(video);
-          hls.on(Hls.Events.MANIFEST_PARSED, () =>
-            video.play().catch(() => {}),
-          );
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            if (isFocused) video.play().catch(() => {});
+          });
         } else {
           video.src = streamUrl;
-          video.play().catch(() => {});
+          if (isFocused) video.play().catch(() => {});
         }
       } catch {
         video.src = streamUrl;
       }
     })();
     return () => {
-      if (hls) hls.destroy();
+      if (hls) { hls.destroy(); hlsRef.current = null; }
     };
   }, [streamUrl]);
+
+  // Pause/resume web video when tab focus changes
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const video = webVideoRef.current;
+    if (!video) return;
+    if (isFocused) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [isFocused]);
 
   const sidebarItems = useMemo<SidebarItem[]>(() => {
     const categories = Array.from(
@@ -167,7 +198,7 @@ export default function TvScreen() {
             <Image
               source={{ uri: item.logo }}
               style={s.channelLogo}
-              resizeMode="contain"
+              contentFit="contain" cachePolicy="memory-disk"
             />
           ) : (
             <Tv2 size={20} color={theme.textSub} />
@@ -221,22 +252,27 @@ export default function TvScreen() {
     setActiveSidebarId("all");
   };
 
+  // Auto-select initial channel ONLY when channels first load and nothing is playing.
+  // isFocused is intentionally NOT in deps – auto-select must NOT run on every
+  // focus change (that's what was causing random channel switches on return).
   useEffect(() => {
-    if (!activeChannel && channels.length > 0) {
-      const visible =
-        playlistSel === "__all__"
-          ? channels
-          : playlistSel === "__default__"
-            ? hasDefault
-              ? channels.filter((c) => c.playlist?.isDefault)
-              : channels
-            : channels.filter((c) => c.playlist?.name === playlistSel);
+    if (activeChannel) return;        // never overwrite user's current channel
+    if (channels.length === 0) return;
 
-      if (visible.length > 0) {
-        setActiveChannel(visible[Math.floor(Math.random() * visible.length)]);
-      }
+    const visible =
+      playlistSel === "__all__"
+        ? channels
+        : playlistSel === "__default__"
+          ? hasDefault
+            ? channels.filter((c) => c.playlist?.isDefault)
+            : channels
+          : channels.filter((c) => c.playlist?.name === playlistSel);
+
+    if (visible.length > 0) {
+      setActiveChannel(visible[Math.floor(Math.random() * visible.length)]);
     }
-  }, [channels, playlistSel, activeChannel, hasDefault]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channels, playlistSel, hasDefault]); // NO isFocused in deps
 
   return (
     <View style={[s.root, { backgroundColor: theme.bg }]}>
@@ -264,7 +300,7 @@ export default function TvScreen() {
               source={{ uri: activeChannel.url }}
               style={StyleSheet.absoluteFill}
               resizeMode="contain"
-              paused={!nativeIsPlaying}
+              paused={!nativeIsPlaying || !isFocused}
               repeat={true}
               onError={(error: any) => {
                 console.error("TvScreen RNVideo error:", error);

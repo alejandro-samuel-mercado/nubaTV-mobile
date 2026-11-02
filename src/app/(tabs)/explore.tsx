@@ -11,7 +11,8 @@ import {
   StatusBar,
   ScrollView,
 } from 'react-native';
-import { Image } from 'expo-image';
+import Image from "../../components/FastImage";
+import { FadeInItem } from "../../components/Motion";
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Search, X } from 'lucide-react-native';
@@ -135,9 +136,10 @@ export default function ExploreScreen() {
     }
   };
 
-  const renderItem = ({ item }: { item: NexoContentItem }) => (
+  const renderItem = ({ item, index }: { item: NexoContentItem; index: number }) => (
+    <FadeInItem index={index % 12} style={s.posterWrap}>
     <TouchableOpacity
-      style={s.posterWrap}
+      style={{ flex: 1 }}
       activeOpacity={0.8}
       onPress={() => router.push({ pathname: '/detail', params: { slug: item.slug } })}
     >
@@ -145,11 +147,14 @@ export default function ExploreScreen() {
         source={{ uri: item.posterUrl ?? item.backdropUrl ?? undefined }}
         style={s.poster}
         contentFit="cover"
+        cachePolicy="memory-disk"
+        priority="normal"
         transition={200}
       />
       <Text style={[s.posterTitle, { color: theme.textSub }]} numberOfLines={2}>{item.title}</Text>
       {item.releaseYear ? <Text style={[s.posterYear, { color: theme.textMuted }]}>{item.releaseYear}</Text> : null}
     </TouchableOpacity>
+    </FadeInItem>
   );
 
 

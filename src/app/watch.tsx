@@ -14,6 +14,7 @@ import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
 import { useAppTheme } from '../contexts/SettingsContext';
+import { useGlobal } from '../contexts/GlobalContext';
 import { saveProgress as saveLocalProgress } from '../services/continueWatching';
 import { NEXOPLAY_API_BASE as API_BASE, nexoFetch as fetchApi } from '../services/nexoplay';
 
@@ -93,6 +94,8 @@ export default function PlayerScreen() {
     const { width: SW, height: SH } = useWindowDimensions();
     const router = useRouter();
     const appTheme = useAppTheme();
+    const { setMiniPlayerAllowed } = useGlobal();
+    useEffect(() => { setMiniPlayerAllowed(false); }, []);
     const colors = { primary: appTheme.accent };
     const navigation = {
         goBack: () => router.back(),

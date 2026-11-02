@@ -1,3 +1,4 @@
+import Image from '../components/FastImage';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import Hls from "hls.js";
@@ -24,7 +25,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Platform,
   Pressable,
   Text,

@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, Dimensions, StatusBar,
 } from 'react-native';
-import { Image } from 'expo-image';
+import Image from "../../components/FastImage";
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bookmark, Heart, Tv2, X } from 'lucide-react-native';
@@ -88,6 +88,8 @@ export default function MyListScreen() {
                 source={{ uri: item.posterUrl ?? undefined }}
                 style={s.poster}
                 contentFit="cover"
+        cachePolicy="memory-disk"
+        priority="normal"
               />
               <TouchableOpacity style={s.removeBtn} onPress={() => remove(item.slug)} hitSlop={8}>
                 <X size={14} color="#fff" />
@@ -129,7 +131,7 @@ export default function MyListScreen() {
           ListEmptyComponent={
             <View style={s.empty}>
               <Heart size={44} color="#444" />
-              <Text style={s.emptyTitle}>Sin canales favoritos</Text>
+              <Text style={s.emptyTitle}>Sin contenido favorito</Text>
               <Text style={s.emptySub}>Marca el corazón en la sección Tv para verlos aquí.</Text>
             </View>
           }

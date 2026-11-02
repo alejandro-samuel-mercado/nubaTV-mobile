@@ -279,6 +279,12 @@ function ReproduccionModal({ visible, onClose }: { visible: boolean; onClose: ()
           sub="Al terminar un episodio, continuar con el siguiente automáticamente"
           value={settings.autoplayNext}
           onToggle={(v) => updateSettings({ autoplayNext: v })}
+        />
+        <SwitchRow
+          label="Ventana flotante de TV" t={t}
+          sub="Al salir de la sección TV, el canal sigue en una ventana pequeña movible"
+          value={settings.miniPlayerEnabled}
+          onToggle={(v) => updateSettings({ miniPlayerEnabled: v })}
           last
         />
       </View>
