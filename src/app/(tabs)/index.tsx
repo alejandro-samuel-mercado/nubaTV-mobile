@@ -15,6 +15,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -49,9 +50,12 @@ interface CategoryTabItem {
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width: winW } = useWindowDimensions();
   const { channels, setActiveChannel, token } = useGlobal();
   const { settings } = useSettings();
   const theme = useAppTheme();
+
+  const isWide = winW >= 768;
 
   // Dynamic Site Config from backend
   const [siteConfig, setSiteConfig] = useState<NexoSiteConfig>({});
@@ -434,7 +438,7 @@ export default function HomeScreen() {
   const hasTvDevices = tvDevices.length > 0 || !!selectedDevice;
 
   return (
-    <View style={[s.container, { backgroundColor: theme.bg }]}>
+    <View style={[s.container, { backgroundColor: "transparent" }]}>
       <StatusBar
         barStyle={theme.statusBar}
         translucent
@@ -445,7 +449,7 @@ export default function HomeScreen() {
       <View
         style={[
           s.topBar,
-          { paddingTop: insets.top + 6, backgroundColor: theme.bg },
+          { paddingTop: insets.top + 6, backgroundColor: "transparent" },
         ]}
       >
         <View style={s.logoContainer}>
@@ -589,7 +593,7 @@ export default function HomeScreen() {
       <View
         style={[
           s.tabsContainer,
-          { backgroundColor: theme.bg, borderBottomColor: theme.divider },
+          { backgroundColor: "transparent", borderBottomColor: theme.divider },
         ]}
       >
         <ScrollView
@@ -632,7 +636,7 @@ export default function HomeScreen() {
           3. SCROLLABLE BODY
       ──────────────────────────────────────────────────────────────────────── */}
       <ScrollView
-        style={[s.scroll, { backgroundColor: theme.bg }]}
+        style={[s.scroll, { backgroundColor: "transparent" }]}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -815,24 +819,66 @@ export default function HomeScreen() {
             {/* HERO SECTION (100% Dynamic from Backend) */}
             {currentHero ? (
               <View style={s.heroContainer}>
-                <Image
-                  source={{
-                    uri:
-                      currentHero.posterUrl ||
-                      currentHero.thumbnails?.find((t) => t.type === "POSTER")
-                        ?.url ||
-                      currentHero.backdropUrl ||
-                      "",
-                  }}
-                  style={StyleSheet.absoluteFill}
-                  contentFit="cover"
-                  transition={300}
-                />
+                {(() => {
+                  const backdropUri =
+                    currentHero.backdropUrl ||
+                    currentHero.thumbnails?.find((t) => t.type === "BACKDROP")
+                      ?.url ||
+                    "";
+                  const posterUri =
+                    currentHero.posterUrl ||
+                    currentHero.thumbnails?.find((t) => t.type === "POSTER")
+                      ?.url ||
+                    "";
+                  const useContainedPoster =
+                    isWide && !backdropUri && !!posterUri;
+                  const imgUri = isWide
+                    ? backdropUri || posterUri
+                    : posterUri || backdropUri;
+
+                  if (useContainedPoster) {
+                    return (
+                      <>
+                        <Image
+                          source={{ uri: posterUri }}
+                          style={[StyleSheet.absoluteFill, { opacity: 0.38 }]}
+                          contentFit="cover"
+                          blurRadius={24}
+                          transition={300}
+                        />
+                        <Image
+                          source={{ uri: posterUri }}
+                          style={StyleSheet.absoluteFill}
+                          contentFit="contain"
+                          transition={300}
+                        />
+                      </>
+                    );
+                  }
+
+                  return (
+                    <Image
+                      source={{ uri: imgUri }}
+                      style={StyleSheet.absoluteFill}
+                      contentFit="cover"
+                      contentPosition="top"
+                      transition={300}
+                    />
+                  );
+                })()}
 
                 {/* Smooth bottom shadow gradient */}
                 <LinearGradient
-                  colors={["transparent", "rgba(13,13,13,0.55)", "#0d0d0d"]}
-                  locations={[0, 0.6, 1]}
+                  colors={[
+                    "transparent",
+                    theme.isLight
+                      ? "rgba(239,232,223,0.40)"
+                      : "rgba(4,3,7,0.38)",
+                    theme.isLight
+                      ? "rgba(239,232,223,0.85)"
+                      : "rgba(4,3,7,0.80)",
+                  ]}
+                  locations={[0, 0.55, 1]}
                   style={s.heroBottomGradient}
                 />
 
@@ -1198,10 +1244,11 @@ const s = StyleSheet.create({
 
   // ── Hero Section ──────────────────────────────────────────────────────────
   heroContainer: {
-    width: SCREEN_W,
+    width: "100%",
     height: 540,
     position: "relative",
     backgroundColor: "transparent",
+    overflow: "hidden",
   },
   heroBottomGradient: {
     position: "absolute",

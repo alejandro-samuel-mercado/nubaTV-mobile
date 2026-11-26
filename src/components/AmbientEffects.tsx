@@ -1,249 +1,453 @@
-import { Image } from "expo-image";
-import React, { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, Easing, StyleSheet, View } from "react-native";
-import { usePathname } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { usePathname, useSegments } from "expo-router";
+import React, { memo, useEffect, useMemo, useRef } from "react";
+import {
+  Animated,
+  Easing,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useAppTheme } from "../contexts/SettingsContext";
-import { getHomepage } from "../services/nexoplay";
-
-const { width: W, height: H } = Dimensions.get("window");
-
-let posterCache: string[] | null = null;
-async function loadPosters(): Promise<string[]> {
-  if (posterCache) return posterCache;
-  try {
-    const d = await getHomepage();
-    const all = [
-      ...(d.heroItems ?? []),
-      ...(d.trending ?? []),
-      ...(d.recent ?? []),
-      ...(d.featured ?? []),
-    ];
-    posterCache = all.map((i) => i.posterUrl).filter(Boolean) as string[];
-  } catch {
-    posterCache = [];
-  }
-  return posterCache;
-}
 
 const rnd = (seed: number) => {
-  const x = Math.sin(seed * 9301 + 49297) * 233280;
+  const x = Math.sin(seed * 9127 + 41183) * 192831;
   return x - Math.floor(x);
 };
 
-const Sparkle = memo(function Sparkle({ i, color }: { i: number; color: string }) {
-  const v = useRef(new Animated.Value(0)).current;
-  const d = useRef(new Animated.Value(0)).current;
+const STAR_COLORS = [
+  "rgba(255, 198, 88, 0.95)",
+  "rgba(253, 164, 175, 0.90)",
+  "rgba(147, 197, 253, 0.92)",
+  "rgba(255, 255, 255, 0.96)",
+];
+
+const DUST_COLORS = [
+  "rgba(255, 183, 3, 0.65)",
+  "rgba(167, 139, 250, 0.60)",
+  "rgba(96, 165, 250, 0.55)",
+];
+
+const TwinkleStar = memo(function TwinkleStar({
+  i,
+  width,
+  height,
+  isLight,
+}: {
+  i: number;
+  width: number;
+  height: number;
+  isLight: boolean;
+}) {
+  const v = useRef(new Animated.Value(rnd(i + 10))).current;
+
   useEffect(() => {
-    const twinkle = Animated.loop(
+    const duration = 2200 + rnd(i + 4) * 3800;
+    const anim = Animated.loop(
       Animated.sequence([
-        Animated.delay(rnd(i) * 2500),
-        Animated.timing(v, { toValue: 1, duration: 1200 + rnd(i + 1) * 1200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(v, { toValue: 0, duration: 1200 + rnd(i + 2) * 1200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.delay(rnd(i + 3) * 1500),
+        Animated.delay(rnd(i + 5) * 2000),
+        Animated.timing(v, {
+          toValue: 1,
+          duration,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(v, {
+          toValue: 0,
+          duration,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
       ]),
     );
-    const drift = Animated.loop(
-      Animated.sequence([
-        Animated.timing(d, { toValue: 1, duration: 6000 + rnd(i + 7) * 5000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(d, { toValue: 0, duration: 6000 + rnd(i + 8) * 5000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      ]),
-    );
-    twinkle.start();
-    drift.start();
-    return () => { twinkle.stop(); drift.stop(); };
-  }, []);
-  const size = 4 + Math.round(rnd(i + 4) * 5);
-  const star = rnd(i + 9) > 0.55;
-  const dx = (rnd(i + 10) - 0.5) * 60;
-  const dy = -20 - rnd(i + 11) * 50;
+    anim.start();
+    return () => anim.stop();
+  }, [i, v]);
+
+  const rSize = rnd(i + 1);
+  const size = rSize > 0.86 ? 2.6 : rSize > 0.52 ? 1.8 : 1.2;
+  const color = isLight
+    ? "rgba(180, 83, 9, 0.55)"
+    : STAR_COLORS[Math.floor(rnd(i + 7) * STAR_COLORS.length)];
+
   return (
     <Animated.View
       style={{
         position: "absolute",
-        left: rnd(i + 5) * W,
-        top: rnd(i + 6) * H,
-        width: size * 3,
-        height: size * 3,
-        alignItems: "center",
-        justifyContent: "center",
-        opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0, 0.35] }),
+        left: rnd(i + 2) * width,
+        top: rnd(i + 3) * height,
+        width: size,
+        height: size,
+        borderRadius: size,
+        backgroundColor: color,
+        opacity: v.interpolate({
+          inputRange: [0, 1],
+          outputRange: isLight ? [0.15, 0.55] : [0.18, 0.95],
+        }),
         transform: [
-          { translateX: d.interpolate({ inputRange: [0, 1], outputRange: [0, dx] }) },
-          { translateY: d.interpolate({ inputRange: [0, 1], outputRange: [0, dy] }) },
-          { scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1.3] }) },
-          { rotate: v.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "90deg"] }) },
+          {
+            scale: v.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.75, 1.4],
+            }),
+          },
         ],
       }}
-    >
-      {star ? (
-        <>
-          <View style={{ position: "absolute", width: size * 3, height: 1.5, backgroundColor: color, borderRadius: 1 }} />
-          <View style={{ position: "absolute", width: 1.5, height: size * 3, backgroundColor: color, borderRadius: 1 }} />
-        </>
-      ) : null}
-      <View
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size,
-          backgroundColor: color,
-          shadowColor: color,
-          shadowOpacity: 1,
-          shadowRadius: 6,
-          elevation: 0,
-        }}
-      />
-    </Animated.View>
+    />
   );
 });
 
-const Bubble = memo(function Bubble({ i, color }: { i: number; color: string }) {
+const CrossSparkle = memo(function CrossSparkle({
+  i,
+  width,
+  height,
+  isLight,
+}: {
+  i: number;
+  width: number;
+  height: number;
+  isLight: boolean;
+}) {
   const v = useRef(new Animated.Value(0)).current;
-  const sway = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
-    const rise = Animated.loop(
+    const dur = 2600 + rnd(i + 31) * 3200;
+    const anim = Animated.loop(
       Animated.sequence([
-        Animated.delay(rnd(i + 20) * 4000),
-        Animated.timing(v, { toValue: 1, duration: 9000 + rnd(i + 21) * 6000, easing: Easing.linear, useNativeDriver: true }),
-        Animated.timing(v, { toValue: 0, duration: 0, useNativeDriver: true }),
+        Animated.delay(rnd(i + 32) * 3000),
+        Animated.timing(v, {
+          toValue: 1,
+          duration: dur,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(v, {
+          toValue: 0,
+          duration: dur,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
       ]),
     );
-    const sw = Animated.loop(
-      Animated.sequence([
-        Animated.timing(sway, { toValue: 1, duration: 2200 + rnd(i + 24) * 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(sway, { toValue: -1, duration: 2200 + rnd(i + 25) * 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      ]),
-    );
-    rise.start();
-    sw.start();
-    return () => { rise.stop(); sw.stop(); };
-  }, []);
-  const size = 24 + Math.round(rnd(i + 22) * 46);
+    anim.start();
+    return () => anim.stop();
+  }, [i, v]);
+
+  const size = 10 + Math.round(rnd(i + 33) * 6);
+  const baseScale = 0.65 + rnd(i + 34) * 0.55;
+  const color = isLight ? "rgba(180, 83, 9, 0.45)" : "rgba(255, 235, 190, 0.92)";
+
   return (
     <Animated.View
       style={{
         position: "absolute",
-        left: rnd(i + 23) * (W - size),
-        top: H,
+        left: (0.06 + rnd(i + 35) * 0.88) * width,
+        top: (0.06 + rnd(i + 36) * 0.84) * height,
         width: size,
         height: size,
-        borderRadius: size / 2,
-        borderWidth: 1.5,
-        borderColor: color,
-        backgroundColor: color + "22",
-        opacity: v.interpolate({ inputRange: [0, 0.1, 0.8, 1], outputRange: [0, 0.16, 0.16, 0] }),
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: v.interpolate({
+          inputRange: [0, 1],
+          outputRange: isLight ? [0.05, 0.3] : [0.06, 0.8],
+        }),
         transform: [
-          { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -(H + size * 2)] }) },
-          { translateX: sway.interpolate({ inputRange: [-1, 1], outputRange: [-18, 18] }) },
-          { scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.15] }) },
+          {
+            scale: v.interpolate({
+              inputRange: [0, 1],
+              outputRange: [baseScale * 0.35, baseScale * 1.15],
+            }),
+          },
+          {
+            rotate: v.interpolate({
+              inputRange: [0, 1],
+              outputRange: ["0deg", "45deg"],
+            }),
+          },
         ],
       }}
     >
       <View
         style={{
           position: "absolute",
-          top: size * 0.18,
-          left: size * 0.22,
-          width: size * 0.22,
-          height: size * 0.14,
-          borderRadius: size,
-          backgroundColor: "rgba(255,255,255,0.55)",
-          transform: [{ rotate: "-30deg" }],
+          width: size,
+          height: 1.3,
+          borderRadius: 1,
+          backgroundColor: color,
+        }}
+      />
+      <View
+        style={{
+          position: "absolute",
+          width: 1.3,
+          height: size,
+          borderRadius: 1,
+          backgroundColor: color,
         }}
       />
     </Animated.View>
   );
 });
 
-const SLOTS = [
-  { left: "4%", top: "10%" },
-  { left: "56%", top: "30%" },
-  { left: "18%", top: "58%" },
-  { left: "60%", top: "72%" },
-] as const;
-
-const GhostPoster = memo(function GhostPoster({ slot, posters }: { slot: number; posters: string[] }) {
+const CosmicDust = memo(function CosmicDust({
+  i,
+  width,
+  height,
+  isLight,
+}: {
+  i: number;
+  width: number;
+  height: number;
+  isLight: boolean;
+}) {
   const v = useRef(new Animated.Value(0)).current;
-  const [idx, setIdx] = useState(slot * 3);
+
   useEffect(() => {
-    if (!posters.length) return;
-    let alive = true;
-    const run = () => {
-      v.setValue(0);
+    const dur = 14000 + rnd(i + 61) * 14000;
+    const anim = Animated.loop(
       Animated.sequence([
-        Animated.delay(slot * 1800),
-        Animated.timing(v, { toValue: 1, duration: 2500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(v, { toValue: 2, duration: 4000, easing: Easing.linear, useNativeDriver: true }),
-        Animated.timing(v, { toValue: 3, duration: 2500, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
-        Animated.delay(1500 + slot * 900),
-      ]).start(({ finished }) => {
-        if (finished && alive) {
-          setIdx((p) => p + 4 + slot);
-          run();
-        }
-      });
-    };
-    run();
-    return () => {
-      alive = false;
-      v.stopAnimation();
-    };
-  }, [posters.length]);
-  if (!posters.length) return null;
-  const w = 120 + (slot % 2) * 40;
-  const rot = slot % 2 ? 8 : -8;
-  const dir = slot % 2 ? -1 : 1;
+        Animated.delay(rnd(i + 62) * 5000),
+        Animated.timing(v, {
+          toValue: 1,
+          duration: dur,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(v, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [i, v]);
+
+  const size = 2 + rnd(i + 63) * 2.4;
+  const driftX = (rnd(i + 64) - 0.5) * 90;
+  const color = isLight
+    ? "rgba(217, 119, 6, 0.35)"
+    : DUST_COLORS[Math.floor(rnd(i + 65) * DUST_COLORS.length)];
+
   return (
     <Animated.View
       style={{
         position: "absolute",
-        ...SLOTS[slot % SLOTS.length],
-        width: w,
-        height: w * 1.5,
-        borderRadius: 12,
-        overflow: "hidden",
-        opacity: v.interpolate({ inputRange: [0, 1, 2, 3], outputRange: [0, 0.07, 0.07, 0] }),
+        left: rnd(i + 66) * width,
+        top: height + 10,
+        width: size,
+        height: size,
+        borderRadius: size,
+        backgroundColor: color,
+        opacity: v.interpolate({
+          inputRange: [0, 0.12, 0.85, 1],
+          outputRange: [0, isLight ? 0.35 : 0.75, isLight ? 0.25 : 0.65, 0],
+        }),
         transform: [
-          { translateY: v.interpolate({ inputRange: [0, 3], outputRange: [40, -40] }) },
-          { translateX: v.interpolate({ inputRange: [0, 3], outputRange: [-20 * dir, 20 * dir] }) },
-          { rotate: v.interpolate({ inputRange: [0, 3], outputRange: [`${rot}deg`, `${-rot / 2}deg`] }) },
-          { scale: v.interpolate({ inputRange: [0, 1, 2, 3], outputRange: [0.85, 1, 1.05, 1.15] }) },
+          {
+            translateY: v.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, -(height + 40)],
+            }),
+          },
+          {
+            translateX: v.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, driftX],
+            }),
+          },
         ],
       }}
-    >
-      <Image
-        source={{ uri: posters[idx % posters.length] }}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        transition={0}
-      />
-    </Animated.View>
+    />
   );
 });
 
-/** Decorative, non-interactive, very subtle animated background overlay. */
+/**
+ * Space ambient background inspired by nubaTV-web:
+ * soft atmospheric color washes + twinkling starfield + cross sparkles + cosmic dust.
+ * Hidden on video/channel player routes.
+ */
 function AmbientEffects() {
   const theme = useAppTheme();
   const pathname = usePathname();
-  const isHome = pathname === "/" || pathname === "/index";
-  const [posters, setPosters] = useState<string[]>(posterCache ?? []);
+  const segments = useSegments() as string[];
+  const { width, height } = useWindowDimensions();
+  const washAnim = useRef(new Animated.Value(0)).current;
+
+  const isPlayerRoute =
+    pathname === "/tv" ||
+    pathname.endsWith("/tv") ||
+    segments.includes("tv") ||
+    pathname === "/watch" ||
+    pathname.endsWith("/watch") ||
+    segments.includes("watch") ||
+    pathname === "/player" ||
+    pathname.endsWith("/player") ||
+    segments.includes("player");
+
   useEffect(() => {
-    loadPosters().then(setPosters);
-  }, []);
-  const color = useMemo(() => (theme.isLight ? "#475569" : "#ffffff"), [theme.isLight]);
-  const sparkles = useMemo(() => Array.from({ length: 22 }, (_, i) => i), []);
-  const bubbles = useMemo(() => Array.from({ length: 8 }, (_, i) => i), []);
+    if (isPlayerRoute) return;
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(washAnim, {
+          toValue: 1,
+          duration: 8000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(washAnim, {
+          toValue: 0,
+          duration: 8000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [isPlayerRoute, washAnim]);
+
+  const stars = useMemo(() => Array.from({ length: 65 }, (_, i) => i), []);
+  const sparkles = useMemo(() => Array.from({ length: 12 }, (_, i) => i), []);
+  const dust = useMemo(() => Array.from({ length: 14 }, (_, i) => i), []);
+
+  if (isPlayerRoute) return null;
+
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      {!isHome && [0, 1, 2, 3].map((s) => (
-        <GhostPoster key={`g${s}`} slot={s} posters={posters} />
+    <View
+      pointerEvents="none"
+      style={[
+        StyleSheet.absoluteFill,
+        {
+          zIndex: 0,
+          elevation: 0,
+          backgroundColor: theme.isLight ? "#efe8df" : "#040307",
+          overflow: "hidden",
+        },
+      ]}
+    >
+      {/* Base deep space gradient */}
+      <LinearGradient
+        colors={
+          theme.isLight
+            ? ["#f7efe5", "#efe4d6", "#e8d9c8"]
+            : ["#0a0612", "#05040b", "#09040a"]
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Atmospheric space wash layer A (warm amber / copper / crimson) */}
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            opacity: washAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: theme.isLight ? [0.55, 0.2] : [0.85, 0.25],
+            }),
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={[
+            "rgba(255, 160, 30, 0.38)",
+            "rgba(194, 65, 12, 0.28)",
+            "rgba(159, 18, 57, 0.22)",
+            "transparent",
+          ]}
+          locations={[0, 0.35, 0.68, 1]}
+          start={{ x: 0.05, y: 0.05 }}
+          end={{ x: 0.95, y: 0.9 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
+
+      {/* Atmospheric space wash layer B (sapphire / indigo / violet) */}
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            opacity: washAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: theme.isLight ? [0.2, 0.55] : [0.25, 0.85],
+            }),
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={[
+            "rgba(59, 130, 246, 0.34)",
+            "rgba(139, 92, 246, 0.32)",
+            "rgba(225, 29, 72, 0.22)",
+            "transparent",
+          ]}
+          locations={[0, 0.38, 0.72, 1]}
+          start={{ x: 0.9, y: 0.1 }}
+          end={{ x: 0.1, y: 0.95 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
+
+      {/* Atmospheric space wash layer C (emerald / gold bottom glow) */}
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            opacity: washAnim.interpolate({
+              inputRange: [0, 0.5, 1],
+              outputRange: theme.isLight ? [0.2, 0.45, 0.2] : [0.25, 0.65, 0.25],
+            }),
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={[
+            "transparent",
+            "rgba(16, 185, 129, 0.18)",
+            "rgba(245, 158, 11, 0.26)",
+            "rgba(168, 85, 247, 0.24)",
+          ]}
+          locations={[0.15, 0.5, 0.78, 1]}
+          start={{ x: 0.2, y: 0.15 }}
+          end={{ x: 0.85, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
+
+      {/* Twinkling starfield */}
+      {stars.map((i) => (
+        <TwinkleStar
+          key={`s${i}`}
+          i={i}
+          width={width}
+          height={height}
+          isLight={theme.isLight}
+        />
       ))}
-      {bubbles.map((i) => (
-        <Bubble key={`b${i}`} i={i} color={theme.accent} />
-      ))}
+
+      {/* 4-point cross sparkles */}
       {sparkles.map((i) => (
-        <Sparkle key={`s${i}`} i={i} color={color} />
+        <CrossSparkle
+          key={`sp${i}`}
+          i={i}
+          width={width}
+          height={height}
+          isLight={theme.isLight}
+        />
+      ))}
+
+      {/* Floating cosmic dust */}
+      {dust.map((i) => (
+        <CosmicDust
+          key={`d${i}`}
+          i={i}
+          width={width}
+          height={height}
+          isLight={theme.isLight}
+        />
       ))}
     </View>
   );

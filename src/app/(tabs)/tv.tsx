@@ -1,11 +1,20 @@
 import Image from "../../components/FastImage";
 import { useIsFocused, useRouter } from "expo-router";
-import { Heart, List, Maximize2, Search, Tv2, X } from "lucide-react-native";
+import {
+  ChevronDown,
+  Heart,
+  List,
+  Maximize2,
+  Search,
+  Tv2,
+  X,
+} from "lucide-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
   FlatList,
+  Modal,
   Platform,
   ScrollView,
   StatusBar,
@@ -13,6 +22,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,9 +30,7 @@ import Video from "react-native-video";
 import { API_URL, Channel, useGlobal } from "../../contexts/GlobalContext";
 import { useAppTheme } from "../../contexts/SettingsContext";
 
-const { width: SCREEN_W } = Dimensions.get("window");
-const PLAYER_H = Math.round((SCREEN_W * 9) / 16);
-const SIDEBAR_W = 108;
+const SIDEBAR_W = 116;
 
 type SidebarItem = { id: string; label: string };
 
@@ -30,6 +38,12 @@ export default function TvScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const theme = useAppTheme();
+  const { width: winW, height: winH } = useWindowDimensions();
+  const playerH = Math.min(
+    Math.round((winW * 9) / 16),
+    Math.round(winH * 0.42),
+    380,
+  );
   const {
     channels,
     activeChannel,
@@ -64,6 +78,7 @@ export default function TvScreen() {
   const nativeVideoRef = useRef<any>(null);
   const [nativeIsPlaying, setNativeIsPlaying] = useState(true);
   const [nativeIsBuffering, setNativeIsBuffering] = useState(true);
+  const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
 
   useEffect(() => {
     if (Platform.OS === "web" || !activeChannel || !nativeVideoRef.current)
@@ -207,7 +222,7 @@ export default function TvScreen() {
         <View style={s.channelInfo}>
           <Text
             style={[s.channelName, { color: theme.text }]}
-            numberOfLines={1}
+            numberOfLines={2}
           >
             {item.name}
           </Text>
@@ -252,6 +267,18 @@ export default function TvScreen() {
     setActiveSidebarId("all");
   };
 
+  const activePlaylistLabel =
+    playlistSel === "__all__"
+      ? "Todas las listas"
+      : playlistSel === "__default__"
+        ? hasDefault
+          ? "Por defecto"
+          : "Todas"
+        : playlistSel;
+
+  const isWide = winW >= 768;
+  const sidebarW = isWide ? 200 : Math.round(winW * 0.36);
+
   // Auto-select initial channel ONLY when channels first load and nothing is playing.
   // isFocused is intentionally NOT in deps – auto-select must NOT run on every
   // focus change (that's what was causing random channel switches on return).
@@ -275,11 +302,11 @@ export default function TvScreen() {
   }, [channels, playlistSel, hasDefault]); // NO isFocused in deps
 
   return (
-    <View style={[s.root, { backgroundColor: theme.bg }]}>
+    <View style={[s.root, { backgroundColor: theme.bg, zIndex: 10 }]}>
       <StatusBar barStyle={theme.statusBar} backgroundColor={theme.bg} />
 
       {/* ── Live player (auto plays active/random channel) ─────────────────── */}
-      <View style={[s.playerWrap, { marginTop: insets.top, height: PLAYER_H }]}>
+      <View style={[s.playerWrap, { marginTop: insets.top, height: playerH }]}>
         {streamUrl ? (
           Platform.OS === "web" ? (
             React.createElement("video", {
@@ -337,12 +364,28 @@ export default function TvScreen() {
         )}
       </View>
 
-      {/* Title row */}
+      {/* Title row + playlist selector (no horizontal pill buttons) */}
       <View style={[s.header, { backgroundColor: theme.bg }]}>
         <Text style={[s.headerTitle, { color: theme.text }]}>
           {title}{" "}
           <Text style={[s.headerArrow, { color: theme.textSub }]}>›</Text>
         </Text>
+        <TouchableOpacity
+          onPress={() => setShowPlaylistMenu(true)}
+          style={[
+            s.playlistBtn,
+            { backgroundColor: theme.cardBg, borderColor: theme.cardBorder },
+          ]}
+          activeOpacity={0.75}
+        >
+          <Text
+            style={[s.playlistBtnTxt, { color: theme.text }]}
+            numberOfLines={1}
+          >
+            {activePlaylistLabel}
+          </Text>
+          <ChevronDown size={14} color={theme.textSub} />
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={toggleSearch}
           style={[
@@ -359,60 +402,66 @@ export default function TvScreen() {
         </TouchableOpacity>
       </View>
 
-      <View
-        style={[
-          s.plWrap,
-          {
-            backgroundColor: theme.bg,
-            borderBottomWidth: 1,
-            borderBottomColor: theme.divider,
-          },
-        ]}
+      <Modal
+        visible={showPlaylistMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPlaylistMenu(false)}
       >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            gap: 8,
-            alignItems: "center",
-          }}
+        <TouchableOpacity
+          style={s.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setShowPlaylistMenu(false)}
         >
-          {[
-            { key: "__default__", label: hasDefault ? "Por defecto" : "Todas" },
-            { key: "__all__", label: "Todas las listas" },
-            ...playlistOptions.map((p) => ({ key: p.name, label: p.name })),
-          ].map((o) => {
-            const on = playlistSel === o.key;
-            return (
-              <TouchableOpacity
-                key={o.key}
-                style={[
-                  s.plChip,
-                  on
-                    ? {
-                        backgroundColor: theme.accent,
-                        borderColor: theme.accent,
-                      }
-                    : {
-                        backgroundColor: theme.cardBg,
-                        borderColor: theme.cardBorder,
-                      },
-                ]}
-                onPress={() => selectPlaylist(o.key)}
-                activeOpacity={0.8}
-              >
-                <Text
-                  style={[s.plChipTxt, { color: on ? "#fff" : theme.textSub }]}
-                  numberOfLines={1}
-                >
-                  {o.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
+          <View
+            style={[
+              s.modalCard,
+              { backgroundColor: theme.bg, borderColor: theme.cardBorder },
+            ]}
+          >
+            <Text style={[s.modalTitle, { color: theme.text }]}>
+              Seleccionar lista
+            </Text>
+            <ScrollView style={{ maxHeight: 320 }}>
+              {[
+                {
+                  key: "__default__",
+                  label: hasDefault ? "Por defecto" : "Todas",
+                },
+                { key: "__all__", label: "Todas las listas" },
+                ...playlistOptions.map((p) => ({
+                  key: p.name,
+                  label: p.name,
+                })),
+              ].map((o) => {
+                const on = playlistSel === o.key;
+                return (
+                  <TouchableOpacity
+                    key={o.key}
+                    style={[
+                      s.modalOption,
+                      on && { backgroundColor: `${theme.accent}22` },
+                    ]}
+                    onPress={() => {
+                      selectPlaylist(o.key);
+                      setShowPlaylistMenu(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        s.modalOptionTxt,
+                        { color: on ? theme.accent : theme.text },
+                      ]}
+                    >
+                      {o.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {showSearch && (
         <View
@@ -448,10 +497,14 @@ export default function TvScreen() {
           keyExtractor={(i) => i.id}
           style={[
             s.sidebar,
-            { borderRightWidth: 1, borderRightColor: theme.divider },
+            {
+              width: sidebarW,
+              borderRightWidth: 1,
+              borderRightColor: theme.divider,
+            },
           ]}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: 140 }}
           renderItem={({ item }) => {
             const isActive = activeSidebarId === item.id;
             return (
@@ -490,7 +543,7 @@ export default function TvScreen() {
                     s.sidebarLabel,
                     { color: isActive ? theme.accent : theme.textSub },
                   ]}
-                  numberOfLines={1}
+                  numberOfLines={2}
                 >
                   {item.label}
                 </Text>
@@ -508,7 +561,7 @@ export default function TvScreen() {
             data={filteredChannels}
             keyExtractor={(item) => item.id}
             style={s.channelList}
-            contentContainerStyle={{ paddingBottom: 120 }}
+            contentContainerStyle={{ paddingBottom: 140 }}
             showsVerticalScrollIndicator={false}
             initialNumToRender={20}
             maxToRenderPerBatch={20}
@@ -531,9 +584,14 @@ export default function TvScreen() {
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1 },
+  root: { flex: 1, minHeight: 0, overflow: "hidden" },
 
-  playerWrap: { width: "100%", backgroundColor: "#000", overflow: "hidden" },
+  playerWrap: {
+    width: "100%",
+    flexShrink: 0,
+    backgroundColor: "#000",
+    overflow: "hidden",
+  },
   playerEmpty: { flex: 1, alignItems: "center", justifyContent: "center" },
   playerOverlay: {
     position: "absolute",
@@ -553,12 +611,42 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 8,
+    paddingTop: 12,
+    paddingBottom: 10,
+    gap: 8,
+    flexShrink: 0,
   },
-  headerTitle: { flex: 1, fontSize: 26, fontWeight: "800" },
+  headerTitle: { flex: 1, fontSize: 24, fontWeight: "800" },
   headerArrow: { fontWeight: "400" },
   headerIconBtn: { padding: 6 },
+  playlistBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    maxWidth: 160,
+  },
+  playlistBtnTxt: { fontSize: 12, fontWeight: "700" },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 340,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+  },
+  modalTitle: { fontSize: 16, fontWeight: "800", marginBottom: 10 },
+  modalOption: { paddingVertical: 11, paddingHorizontal: 10, borderRadius: 8 },
+  modalOptionTxt: { fontSize: 14, fontWeight: "600" },
 
   searchWrap: {
     flexDirection: "row",
@@ -587,9 +675,19 @@ const s = StyleSheet.create({
   plChipTxt: { fontSize: 12, fontWeight: "700", maxWidth: 160 },
   plChipTxtOn: { color: "#fff" },
 
-  body: { flex: 1, flexDirection: "row" },
+  body: {
+    flex: 1,
+    minHeight: 0,
+    flexDirection: "row",
+    overflow: "hidden",
+  },
 
-  sidebar: { width: SIDEBAR_W, flexGrow: 0 },
+  sidebar: {
+    flexGrow: 0,
+    flexShrink: 0,
+    minHeight: 0,
+    height: "100%",
+  },
   sidebarItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -604,7 +702,7 @@ const s = StyleSheet.create({
   sidebarLabel: { flex: 1, fontSize: 13, fontWeight: "600" },
   sidebarLabelActive: {}, // overridden inline
 
-  channelList: { flex: 1 },
+  channelList: { flex: 1, minHeight: 0, height: "100%" },
   channelRow: {
     flexDirection: "row",
     alignItems: "center",

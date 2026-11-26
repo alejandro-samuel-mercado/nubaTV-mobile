@@ -46,14 +46,14 @@ export default function MyListScreen() {
   };
 
   return (
-    <View style={[s.root, { backgroundColor: theme.bg }]}>
+    <View style={[s.root, { backgroundColor: 'transparent' }]}>
       <StatusBar barStyle={theme.statusBar} backgroundColor={theme.bg} />
       
-      <View style={[s.header, { paddingTop: insets.top + 12, backgroundColor: theme.bg }]}>
+      <View style={[s.header, { paddingTop: insets.top + 12, backgroundColor: 'transparent' }]}>
         <Text style={[s.title, { color: theme.text }]}>Mi lista</Text>
       </View>
 
-      <View style={[s.tabs, { borderBottomColor: theme.divider, backgroundColor: theme.bg }]}>
+      <View style={[s.tabs, { borderBottomColor: theme.divider, backgroundColor: 'transparent' }]}>
         {([
           { id: 'content', label: `Películas y series (${list.length})` },
           { id: 'channels', label: `Canales (${favChannels.length})` },
@@ -165,8 +165,8 @@ const s = StyleSheet.create({
     width: 46, height: 46, borderRadius: 10, backgroundColor: 'rgba(128,128,128,0.15)',
     alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
   },
-  chName: { fontSize: 14, fontWeight: '700' },
-  chMeta: { fontSize: 12, marginTop: 2 },
+  chName: { color: '#ffffff', fontSize: 14, fontWeight: '700' },
+  chMeta: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 2 },
   empty: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32, gap: 10 },
   emptyTitle: { color: '#ddd', fontSize: 16, fontWeight: '700' },
   emptySub: { color: '#666', fontSize: 13, textAlign: 'center' },

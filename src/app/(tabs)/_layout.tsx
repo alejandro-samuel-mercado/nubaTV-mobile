@@ -1,5 +1,5 @@
 import { BlurView } from "expo-blur";
-import { Tabs, usePathname } from "expo-router";
+import { Tabs, usePathname, useSegments } from "expo-router";
 import { Bookmark, Compass, Home, Settings, Tv2 } from "lucide-react-native";
 import {
     Platform,
@@ -93,7 +93,11 @@ export default function TabLayout() {
   const { settings } = useSettings();
   const { miniPlayerAllowed, activeChannel } = useGlobal();
   const pathname = usePathname();
-  const onTv = pathname === "/tv" || pathname.endsWith("/tv");
+  const segments = useSegments();
+  const onTv =
+    pathname === "/tv" ||
+    pathname.endsWith("/tv") ||
+    (segments as string[]).includes("tv");
   // Mount the player as soon as the user has visited TV + has a channel.
   // We keep it mounted (pre-buffering) and only toggle visibility.
   const miniMounted =
@@ -101,14 +105,17 @@ export default function TabLayout() {
   const miniVisible = miniMounted && !onTv;
   return (
     <View style={{ flex: 1, backgroundColor: settings.backgroundColor }}>
-      <Tabs
-        tabBar={(props) => <CustomTabBar {...props} />}
+      {!onTv && <AmbientEffects />}
+      <View style={{ flex: 1, position: "relative", zIndex: 1 }}>
+        <Tabs
+          tabBar={(props) => <CustomTabBar {...props} />}
         screenLayout={({ children }) => (
           <ScreenTransition>{children}</ScreenTransition>
         )}
         screenOptions={{
           headerShown: false,
           animation: "fade",
+          sceneStyle: { backgroundColor: "transparent" },
           tabBarStyle: {
             position: "absolute",
             bottom: 0,
@@ -167,8 +174,8 @@ export default function TabLayout() {
             title: "Ajustes",
           }}
         />
-      </Tabs>
-      <AmbientEffects />
+        </Tabs>
+      </View>
     </View>
   );
 }

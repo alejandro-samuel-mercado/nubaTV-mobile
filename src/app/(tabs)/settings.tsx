@@ -423,7 +423,7 @@ export default function SettingsScreen() {
   const [showActualizaciones, setShowActualizaciones] = useState(false);
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: t.bg }]} edges={['top']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: 'transparent' }]} edges={['top']}>
       <CuentaModal visible={showCuenta} onClose={() => setShowCuenta(false)} />
       <AparienciaModal visible={showApariencia} onClose={() => setShowApariencia(false)} />
       <ReproduccionModal visible={showReproduccion} onClose={() => setShowReproduccion(false)} />

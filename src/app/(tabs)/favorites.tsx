@@ -19,7 +19,7 @@ export default function FavoritesScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <StatusBar barStyle={theme.statusBar} backgroundColor={theme.bg} />
 
       <ScrollView
